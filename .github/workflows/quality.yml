@@ -1,0 +1,83 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CLOUDFLARE_PERSIST_PATH: ${{ github.workspace }}/.wrangler/ci
+      NEXT_PUBLIC_SITE_URL: https://ci.example.org
+      PAYLOAD_SECRET: ci-only-payload-secret-with-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify fresh migration chain
+        run: pnpm exec tsx src/scripts/testFreshMigrations.ts
+        env:
+          NODE_OPTIONS: --no-deprecation
+          PAYLOAD_SECRET: local-migration-test-secret-32-chars
+      - name: Verify Registration Delivery upgrade
+        run: pnpm exec tsx src/scripts/testRegistrationUpgrade.ts
+        env:
+          NODE_OPTIONS: --no-deprecation
+      - name: Prepare test database
+        run: pnpm exec payload migrate
+        env:
+          NODE_OPTIONS: --no-deprecation
+          PAYLOAD_DB_PUSH: 'false'
+          REFRESH_STARTER_CONTENT: overwrite-local-editorial-content
+      - run: pnpm seed:local
+        env:
+          PAYLOAD_DB_PUSH: 'false'
+      - name: Verify generated files are committed
+        run: |
+          pnpm exec wrangler types --env-file wrangler-types.env --env-interface CloudflareEnv cloudflare-env.d.ts
+          pnpm exec payload generate:types
+          pnpm exec payload generate:importmap
+          git diff --exit-code -- cloudflare-env.d.ts src/payload-types.ts 'src/app/(payload)/admin/importMap.js'
+        env:
+          NODE_OPTIONS: --no-deprecation
+      - name: Format, lint, types and integration tests
+        run: pnpm check
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Browser tests
+        run: pnpm exec playwright test --config=playwright.config.ts
+        env:
+          NODE_OPTIONS: --no-deprecation --import=tsx/esm
+          PAYLOAD_DB_PUSH: 'false'
+          PAYLOAD_SECRET: local-e2e-test-secret-with-32-characters
+          NEXT_PUBLIC_SITE_URL: https://e2e.ichtus.test
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+          TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+          REGISTRATION_DELIVERY_KEY: '0000000000000000000000000000000000000000000000000000000000000000'
+      - name: Next production build
+        run: pnpm exec next build --webpack
+        env:
+          NODE_OPTIONS: --no-deprecation --max-old-space-size=8000
+      - name: OpenNext Cloudflare build
+        run: pnpm exec opennextjs-cloudflare build
+        env:
+          NODE_OPTIONS: --no-deprecation
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

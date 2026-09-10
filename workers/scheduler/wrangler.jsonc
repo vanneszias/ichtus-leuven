@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "main": "src/index.ts",
+  "name": "ichtus-leuven-scheduler-local",
+  "keep_vars": true,
+  "compatibility_date": "2026-08-01",
+  "triggers": { "crons": ["* * * * *"] },
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "ichtus-leuven-scheduler-staging",
+      "vars": { "TARGET_URL": "https://ichtus-leuven-staging.vanneszias.workers.dev" },
+      "triggers": { "crons": ["* * * * *"] }
+    },
+    "production": {
+      "name": "ichtus-leuven-scheduler-production",
+      "vars": { "TARGET_URL": "https://ichtus-leuven-production.vanneszias.workers.dev" },
+      "triggers": { "crons": ["* * * * *"] }
+    }
+  }
+}

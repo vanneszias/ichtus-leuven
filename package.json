@@ -1,0 +1,63 @@
+{
+  "name": "ichtus-leuven",
+  "version": "1.0.0",
+  "packageManager": "pnpm@11.23.0",
+  "description": "Bilingual Payload website for Ichtus Leuven",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_SECRET=local-check-payload-secret-with-32-characters NEXT_PUBLIC_SITE_URL=https://check.ichtus.test sh -c 'biome check . && tsc --noEmit && vitest run --config ./vitest.config.mts'",
+    "deploy:prod": "cross-env NODE_ENV=production PAYLOAD_DB_PUSH=false CLOUDFLARE_REMOTE=true CLOUDFLARE_ENV=production sh -c 'tsx src/scripts/preflight.ts --env=production && payload migrate && wrangler d1 execute D1 --command \"PRAGMA optimize\" --env=production --remote && opennextjs-cloudflare deploy --env=production && tsx src/scripts/syncRuntimeConfig.ts && tsx src/scripts/deployScheduler.ts'",
+    "deploy:staging": "cross-env NODE_ENV=production PAYLOAD_DB_PUSH=false CLOUDFLARE_REMOTE=true CLOUDFLARE_ENV=staging sh -c 'tsx src/scripts/preflight.ts --env=staging && payload migrate && wrangler d1 execute D1 --command \"PRAGMA optimize\" --env=staging --remote && opennextjs-cloudflare build --env=staging && opennextjs-cloudflare deploy --env=staging && tsx src/scripts/syncRuntimeConfig.ts && tsx src/scripts/deployScheduler.ts'",
+    "dev": "rm -rf .next .open-next && cross-env NODE_OPTIONS=--no-deprecation next dev --webpack",
+    "pull:prod": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_DB_PUSH=false tsx src/scripts/pullRemoteContent.ts --env=production",
+    "pull:staging": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_DB_PUSH=false tsx src/scripts/pullRemoteContent.ts --env=staging",
+    "seed:local": "cross-env NODE_OPTIONS=--no-deprecation CLOUDFLARE_REMOTE=false tsx src/scripts/seed.ts",
+    "seed:prod": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_DB_PUSH=false CLOUDFLARE_REMOTE=true CLOUDFLARE_ENV=production tsx src/scripts/seed.ts",
+    "seed:staging": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_DB_PUSH=false CLOUDFLARE_REMOTE=true CLOUDFLARE_ENV=staging tsx src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fullcalendar/react": "^7.1.0",
+    "@opennextjs/cloudflare": "1.20.1",
+    "@payloadcms/db-d1-sqlite": "3.89.0",
+    "@payloadcms/next": "3.89.0",
+    "@payloadcms/richtext-lexical": "3.89.0",
+    "@payloadcms/storage-r2": "3.89.0",
+    "@payloadcms/ui": "3.89.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "16.6.1",
+    "graphql": "^16.14.2",
+    "next": "16.3.4",
+    "payload": "3.89.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "temporal-polyfill": "^1.0.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "@playwright/test": "1.58.2",
+    "@testing-library/react": "16.3.0",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "4.5.2",
+    "jsdom": "28.0.0",
+    "tsx": "4.22.4",
+    "typescript": "5.7.3",
+    "vite-tsconfig-paths": "6.0.5",
+    "vitest": "4.1.11",
+    "wrangler": "~4.116.0"
+  },
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0",
+    "pnpm": "^9 || ^10 || ^11"
+  },
+  "cloudflare": {
+    "bindings": {
+      "PAYLOAD_SECRET": {
+        "description": "Generate a random string using `openssl rand -hex 32`"
+      }
+    }
+  }
+}

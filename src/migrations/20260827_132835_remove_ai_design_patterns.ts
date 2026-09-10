@@ -1,0 +1,63 @@
+import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-d1-sqlite'
+
+export async function up({ db }: MigrateUpArgs): Promise<void> {
+  await db.run(sql`ALTER TABLE \`pages_blocks_hero\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_values\` DROP COLUMN \`show_numbers\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_content\` DROP COLUMN \`label\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` DROP COLUMN \`kicker_left\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` DROP COLUMN \`kicker_right\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` DROP COLUMN \`small_label\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` DROP COLUMN \`badge\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_events_list\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_statement\` DROP COLUMN \`label\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_call_to_action\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_media_grid\` DROP COLUMN \`label\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_info_cards\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_faq\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_hero\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_values\` DROP COLUMN \`show_numbers\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_content\` DROP COLUMN \`label\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` DROP COLUMN \`kicker_left\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` DROP COLUMN \`kicker_right\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` DROP COLUMN \`small_label\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` DROP COLUMN \`badge\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_events_list\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_statement\` DROP COLUMN \`label\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_call_to_action\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_media_grid\` DROP COLUMN \`label\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_info_cards\` DROP COLUMN \`eyebrow\`;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_faq\` DROP COLUMN \`eyebrow\`;`)
+}
+
+export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+  await db.run(sql`ALTER TABLE \`pages_blocks_hero\` ADD \`eyebrow\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_values\` ADD \`show_numbers\` integer DEFAULT true;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_content\` ADD \`label\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` ADD \`kicker_left\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` ADD \`kicker_right\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` ADD \`small_label\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_poster\` ADD \`badge\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_events_list\` ADD \`eyebrow\` text DEFAULT 'agenda';`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_statement\` ADD \`label\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_call_to_action\` ADD \`eyebrow\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_media_grid\` ADD \`label\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_info_cards\` ADD \`eyebrow\` text;`)
+  await db.run(sql`ALTER TABLE \`pages_blocks_faq\` ADD \`eyebrow\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_hero\` ADD \`eyebrow\` text;`)
+  await db.run(
+    sql`ALTER TABLE \`_pages_v_blocks_values\` ADD \`show_numbers\` integer DEFAULT true;`,
+  )
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_content\` ADD \`label\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` ADD \`kicker_left\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` ADD \`kicker_right\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` ADD \`small_label\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_poster\` ADD \`badge\` text;`)
+  await db.run(
+    sql`ALTER TABLE \`_pages_v_blocks_events_list\` ADD \`eyebrow\` text DEFAULT 'agenda';`,
+  )
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_statement\` ADD \`label\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_call_to_action\` ADD \`eyebrow\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_media_grid\` ADD \`label\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_info_cards\` ADD \`eyebrow\` text;`)
+  await db.run(sql`ALTER TABLE \`_pages_v_blocks_faq\` ADD \`eyebrow\` text;`)
+}

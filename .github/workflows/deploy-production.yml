@@ -1,0 +1,102 @@
+name: Promote production
+
+on:
+  workflow_dispatch:
+    inputs:
+      staging_run_id:
+        description: Successful Deploy staging workflow run ID
+        required: true
+        type: string
+      commit_sha:
+        description: Exact commit SHA deployed to staging
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  verify-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ inputs.commit_sha }}
+      STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
+      - name: Verify staging evidence
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          EXPECTED_WORKFLOW_ID="$(gh api "repos/${{ github.repository }}/actions/workflows/deploy-staging.yml" --jq .id)"
+          test "$(gh api "repos/${{ github.repository }}/actions/runs/$STAGING_RUN_ID" --jq .workflow_id)" = "$EXPECTED_WORKFLOW_ID"
+          test "$(gh api "repos/${{ github.repository }}/actions/runs/$STAGING_RUN_ID" --jq .conclusion)" = "success"
+          gh run download "$STAGING_RUN_ID" --name "staging-release-$STAGING_RUN_ID"
+          test "$(tr -d '\n' < release-revision.txt)" = "$RELEASE_SHA"
+
+  deploy:
+    needs: verify-staging
+    environment:
+      name: production
+      url: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      DEPLOYMENT_SMOKE_URL: https://ichtus-leuven-production.vanneszias.workers.dev
+      EMAIL_FROM_ADDRESS: ${{ vars.EMAIL_FROM_ADDRESS }}
+      EMAIL_FROM_NAME: ${{ vars.EMAIL_FROM_NAME }}
+      EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      REGISTRATION_CLEANUP_SECRET: ${{ secrets.REGISTRATION_CLEANUP_SECRET }}
+      REGISTRATION_DELIVERY_KEY: ${{ secrets.REGISTRATION_DELIVERY_KEY }}
+      REGISTRATION_DELIVERY_SECRET: ${{ secrets.REGISTRATION_DELIVERY_SECRET }}
+      GOOGLE_CALENDAR_ID: ${{ vars.GOOGLE_CALENDAR_ID }}
+      GOOGLE_CALENDAR_API_KEY: ${{ secrets.GOOGLE_CALENDAR_API_KEY }}
+      CALENDAR_SYNC_SECRET: ${{ secrets.CALENDAR_SYNC_SECRET }}
+      PAYLOAD_JOBS_SECRET: ${{ secrets.PAYLOAD_JOBS_SECRET }}
+      REGISTRATION_DELIVERY_SCHEDULE: ${{ vars.REGISTRATION_DELIVERY_SCHEDULE }}
+      REGISTRATION_CLEANUP_SCHEDULE: ${{ vars.REGISTRATION_CLEANUP_SCHEDULE }}
+      CALENDAR_SYNC_SCHEDULE: ${{ vars.CALENDAR_SYNC_SCHEDULE }}
+      PAYLOAD_JOBS_SCHEDULE: ${{ vars.PAYLOAD_JOBS_SCHEDULE }}
+      MONITORING_HEALTHCHECK_URL: ${{ vars.MONITORING_HEALTHCHECK_URL }}
+      FONT_PRODUCTION_LICENSE_CONFIRMED: ${{ vars.FONT_PRODUCTION_LICENSE_CONFIRMED }}
+      RELEASE_SHA: ${{ inputs.commit_sha }}
+      STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
+      - name: Download verified staging artifact
+        run: gh run download "$STAGING_RUN_ID" --name "staging-release-$STAGING_RUN_ID"
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Promote approved revision
+        run: pnpm deploy:prod
+      - name: Verify production health
+        run: |
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_SMOKE_URL/api/health"
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_SMOKE_URL/nl"
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_SMOKE_URL/en"
+          curl --fail --retry 5 --retry-delay 5 --header "Authorization: Bearer $PAYLOAD_JOBS_SECRET" "$DEPLOYMENT_SMOKE_URL/api/payload-jobs/run?allQueues=true&limit=10"
+          curl --fail --retry 5 --retry-delay 5 --request POST --header "Authorization: Bearer $REGISTRATION_DELIVERY_SECRET" "$DEPLOYMENT_SMOKE_URL/api/registration-delivery-process"
+          curl --fail --retry 5 --retry-delay 5 --request POST --header "Authorization: Bearer $REGISTRATION_CLEANUP_SECRET" "$DEPLOYMENT_SMOKE_URL/api/registration-cleanup"
+          curl --fail --retry 5 --retry-delay 5 --request POST --header "Authorization: Bearer $CALENDAR_SYNC_SECRET" "$DEPLOYMENT_SMOKE_URL/api/calendar/sync"

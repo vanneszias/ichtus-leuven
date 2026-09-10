@@ -1,0 +1,66 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "ichtus-leuven-local",
+  "keep_vars": true,
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_id": "local-ichtus-leuven",
+      "database_name": "ichtus-leuven-local"
+    }
+  ],
+  "r2_buckets": [{ "binding": "R2", "bucket_name": "ichtus-leuven-media-local" }],
+  // Enables Next.js image optimization through Cloudflare Images.
+  // Free plan: 5,000 unique transformations per month (see ADR 0006).
+  "images": { "binding": "IMAGES" },
+  "env": {
+    "staging": {
+      "name": "ichtus-leuven-staging",
+      "workers_dev": true,
+      "vars": { "APP_ENV": "staging" },
+      "routes": [{ "pattern": "staging.ichtusleuven.be", "custom_domain": true }],
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_id": "1095fa5a-4e04-4149-ae5b-ef186612427c",
+          "database_name": "ichtus-leuven-staging",
+          "remote": true
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "R2", "bucket_name": "ichtus-leuven-media-staging", "remote": true }
+      ],
+      "images": { "binding": "IMAGES" },
+      "send_email": [{ "name": "EMAIL" }]
+    },
+    "production": {
+      "name": "ichtus-leuven-production",
+      "workers_dev": true,
+      "vars": { "APP_ENV": "production" },
+      "routes": [
+        { "pattern": "ichtusleuven.be", "custom_domain": true },
+        { "pattern": "www.ichtusleuven.be", "custom_domain": true }
+      ],
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_id": "ae38d5a8-aea9-480a-9534-c934224113de",
+          "database_name": "ichtus-leuven-production",
+          "remote": true
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "R2", "bucket_name": "ichtus-leuven-media-production", "remote": true }
+      ],
+      "images": { "binding": "IMAGES" },
+      "send_email": [{ "name": "EMAIL" }]
+    }
+  }
+}

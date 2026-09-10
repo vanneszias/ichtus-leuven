@@ -1,0 +1,90 @@
+name: Deploy staging
+
+on:
+  workflow_run:
+    workflows: [Quality]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA that passed Quality
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: staging
+      url: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+      DEPLOYMENT_SMOKE_URL: https://ichtus-leuven-staging.vanneszias.workers.dev
+      EMAIL_FROM_ADDRESS: ${{ vars.EMAIL_FROM_ADDRESS }}
+      EMAIL_FROM_NAME: ${{ vars.EMAIL_FROM_NAME }}
+      EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      REGISTRATION_CLEANUP_SECRET: ${{ secrets.REGISTRATION_CLEANUP_SECRET }}
+      REGISTRATION_DELIVERY_KEY: ${{ secrets.REGISTRATION_DELIVERY_KEY }}
+      REGISTRATION_DELIVERY_SECRET: ${{ secrets.REGISTRATION_DELIVERY_SECRET }}
+      GOOGLE_CALENDAR_ID: ${{ vars.GOOGLE_CALENDAR_ID }}
+      GOOGLE_CALENDAR_API_KEY: ${{ secrets.GOOGLE_CALENDAR_API_KEY }}
+      CALENDAR_SYNC_SECRET: ${{ secrets.CALENDAR_SYNC_SECRET }}
+      PAYLOAD_JOBS_SECRET: ${{ secrets.PAYLOAD_JOBS_SECRET }}
+      REGISTRATION_DELIVERY_SCHEDULE: ${{ vars.REGISTRATION_DELIVERY_SCHEDULE }}
+      REGISTRATION_CLEANUP_SCHEDULE: ${{ vars.REGISTRATION_CLEANUP_SCHEDULE }}
+      CALENDAR_SYNC_SCHEDULE: ${{ vars.CALENDAR_SYNC_SCHEDULE }}
+      PAYLOAD_JOBS_SCHEDULE: ${{ vars.PAYLOAD_JOBS_SCHEDULE }}
+      MONITORING_HEALTHCHECK_URL: ${{ vars.MONITORING_HEALTHCHECK_URL }}
+      FONT_PRODUCTION_LICENSE_CONFIRMED: ${{ vars.FONT_PRODUCTION_LICENSE_CONFIRMED }}
+      RELEASE_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify exact revision passed Quality
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(gh api "repos/${{ github.repository }}/actions/workflows/quality.yml/runs?head_sha=$RELEASE_SHA&status=success" --jq '.workflow_runs | length')" -gt 0
+      - name: Record release revision
+        run: git rev-parse HEAD > release-revision.txt
+      - name: Deploy isolated staging
+        run: pnpm deploy:staging
+      - name: Verify staging health
+        run: |
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_SMOKE_URL/api/health"
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_SMOKE_URL/nl"
+          curl --fail --retry 5 --retry-delay 5 "$DEPLOYMENT_SMOKE_URL/en"
+          curl --fail --retry 5 --retry-delay 5 --header "Authorization: Bearer $PAYLOAD_JOBS_SECRET" "$DEPLOYMENT_SMOKE_URL/api/payload-jobs/run?allQueues=true&limit=10"
+          curl --fail --retry 5 --retry-delay 5 --request POST --header "Authorization: Bearer $REGISTRATION_DELIVERY_SECRET" "$DEPLOYMENT_SMOKE_URL/api/registration-delivery-process"
+          curl --fail --retry 5 --retry-delay 5 --request POST --header "Authorization: Bearer $REGISTRATION_CLEANUP_SECRET" "$DEPLOYMENT_SMOKE_URL/api/registration-cleanup"
+          curl --fail --retry 5 --retry-delay 5 --request POST --header "Authorization: Bearer $CALENDAR_SYNC_SECRET" "$DEPLOYMENT_SMOKE_URL/api/calendar/sync"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-release-${{ github.run_id }}
+          path: |
+            release-revision.txt
+            .open-next/
+          include-hidden-files: true
+          retention-days: 30
