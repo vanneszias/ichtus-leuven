@@ -12,6 +12,8 @@ import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { RegistrationDeliveries } from './collections/RegistrationDeliveries'
 import { Registrations } from './collections/Registrations'
+import { ShortLinkClicks } from './collections/ShortLinkClicks'
+import { ShortLinks } from './collections/ShortLinks'
 import { Users } from './collections/Users'
 import { calendarSync } from './endpoints/calendarSync'
 import { health } from './endpoints/health'
@@ -85,7 +87,16 @@ export default buildConfig({
       titleSuffix: ' | Ichtus Leuven',
     },
   },
-  collections: [Pages, Events, Registrations, RegistrationDeliveries, Media, Users],
+  collections: [
+    Pages,
+    Events,
+    Registrations,
+    RegistrationDeliveries,
+    ShortLinks,
+    ShortLinkClicks,
+    Media,
+    Users,
+  ],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   endpoints: [

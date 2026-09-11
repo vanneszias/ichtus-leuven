@@ -13,6 +13,7 @@ import {
 } from '@/lib/registrations'
 import { validateRegistrationFields } from '@/lib/registrationValidation'
 import { requiredSecret } from '@/lib/runtimeConfig'
+import { pruneShortLinkClicks } from '@/lib/shortLinks'
 
 const noStore = { 'Cache-Control': 'no-store' }
 const MAINTENANCE_TIME_BUDGET_MS = 20_000
@@ -229,6 +230,9 @@ export const registrationCleanup: Endpoint = {
     const deadline = Date.now() + MAINTENANCE_TIME_BUDGET_MS
     const closures = { completedEvents: 0, hasMore: true, processed: 0 }
     const retention = { anonymized: 0, deferred: false, hasMore: true }
+    // This is the site's only recurring maintenance run, so short link click
+    // rows age out here rather than behind a second cron and a second secret.
+    const shortLinkClicks = { deleted: 0, hasMore: true }
 
     do {
       if (closures.hasMore) {
@@ -243,10 +247,21 @@ export const registrationCleanup: Endpoint = {
         retention.deferred = batch.deferred
         retention.hasMore = batch.hasMore
       }
-    } while ((closures.hasMore || retention.hasMore) && Date.now() < deadline)
+      if (shortLinkClicks.hasMore) {
+        const batch = await pruneShortLinkClicks(req.payload, limit)
+        shortLinkClicks.deleted += batch.deleted
+        shortLinkClicks.hasMore = batch.hasMore
+      }
+    } while (
+      (closures.hasMore || retention.hasMore || shortLinkClicks.hasMore) &&
+      Date.now() < deadline
+    )
 
-    const timedOut = closures.hasMore || retention.hasMore
+    const timedOut = closures.hasMore || retention.hasMore || shortLinkClicks.hasMore
     const needsContinuation = timedOut || retention.deferred
-    return Response.json({ closures, needsContinuation, retention, timedOut }, { headers: noStore })
+    return Response.json(
+      { closures, needsContinuation, retention, shortLinkClicks, timedOut },
+      { headers: noStore },
+    )
   },
 }

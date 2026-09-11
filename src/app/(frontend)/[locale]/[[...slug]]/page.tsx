@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { PageView } from '@/components/PageView'
+import { ShortLinkView } from '@/components/ShortLinkView'
 import { getAlternatePageHref, getPage, getSiteSettings, type Locale, locales } from '@/lib/content'
 import { siteURL } from '@/lib/runtimeConfig'
 import {
@@ -19,13 +20,32 @@ function parseParams(params: { locale: string; slug?: string[] }) {
   return { locale: params.locale as Locale, slug: params.slug?.join('/') || 'home' }
 }
 
+/**
+ * Short links live at the domain root, so `/weekend` arrives here with the
+ * code where a locale prefix is expected. `/nl/weekend` reaches the same code
+ * once no Page claims that slug, which is what gives an English visitor an
+ * English confirmation screen.
+ */
+function shortLinkCode(params: { locale: string; slug?: string[] }) {
+  const segments = locales.includes(params.locale as Locale)
+    ? (params.slug ?? [])
+    : [params.locale, ...(params.slug ?? [])]
+  return segments.length === 1 ? segments[0] : null
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const route = parseParams(await params)
+  const resolved = await params
+  // A confirmation screen is a waypoint, never a destination a crawler should
+  // index in place of the page it forwards to.
+  if (!locales.includes(resolved.locale as Locale)) return { robots: metadataRobots(true) }
+  const route = parseParams(resolved)
   const [page, settings] = await Promise.all([
     getPage(route.locale, route.slug),
     getSiteSettings(route.locale),
   ])
-  if (!page) return {}
+  // Either a genuine 404 or a short link's confirmation screen; neither belongs
+  // in an index.
+  if (!page) return { robots: metadataRobots(true) }
   const otherLocale = route.locale === 'nl' ? 'en' : 'nl'
   const alternateHref = await getAlternatePageHref(page.id, otherLocale)
   const title = page.seo?.title || page.title
@@ -60,6 +80,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ContentPage({ params }: Props) {
-  const route = parseParams(await params)
+  const resolved = await params
+  const code = shortLinkCode(resolved)
+  if (!locales.includes(resolved.locale as Locale)) {
+    if (!code) notFound()
+    return <ShortLinkView code={code} locale="nl" />
+  }
+
+  const route = parseParams(resolved)
+  if (code && !(await getPage(route.locale, route.slug)))
+    return <ShortLinkView code={code} locale={route.locale} />
   return <PageView locale={route.locale} slug={route.slug} />
 }

@@ -38,6 +38,8 @@ Collections:
 - `Events`: localized event content, dates, type, accent, synchronization metadata and where “more info” leads: an own page with a localized slug, an external page, or nowhere
 - `Registrations`: private attendee records, status and cancellation metadata
 - `Registration Deliveries`: private, durable and retryable transactional email intents
+- `Short Links`: codes served at the domain root that forward visitors to a page, an activity or an external URL through a confirmation screen, with a QR code and a click counter
+- `Short Link Clicks`: one row per followed short link, with referrer and country, pruned after twelve months
 - `Media`: localized alt text and captions, stored in R2
 - `Users`: Payload administrators, content editors and registration managers
 

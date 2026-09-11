@@ -27,6 +27,7 @@ import * as migration_20260910_140000_activity_type_colour from './20260910_1400
 import * as migration_20260911_120000_english_activity_copy from './20260911_120000_english_activity_copy'
 import * as migration_20260911_140000_activity_body from './20260911_140000_activity_body'
 import * as migration_20260911_150000_synced_activities_without_pages from './20260911_150000_synced_activities_without_pages'
+import * as migration_20260911_160000_short_links from './20260911_160000_short_links'
 
 export const migrations = [
   {
@@ -173,5 +174,10 @@ export const migrations = [
     up: migration_20260911_150000_synced_activities_without_pages.up,
     down: migration_20260911_150000_synced_activities_without_pages.down,
     name: '20260911_150000_synced_activities_without_pages',
+  },
+  {
+    up: migration_20260911_160000_short_links.up,
+    down: migration_20260911_160000_short_links.down,
+    name: '20260911_160000_short_links',
   },
 ]

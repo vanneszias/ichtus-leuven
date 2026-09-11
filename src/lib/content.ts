@@ -4,7 +4,7 @@ import { getPayload } from 'payload'
 import { cache } from 'react'
 
 import { eventDetailHref } from '@/lib/events'
-import type { Event, Page, SiteSetting } from '@/payload-types'
+import type { Event, Page, ShortLink, SiteSetting } from '@/payload-types'
 
 export type Locale = 'nl' | 'en'
 
@@ -346,3 +346,27 @@ export async function getSectionNavigation(
     return null
   }
 }
+
+/**
+ * Short links are never cached: an editor who deactivates one, or an expiry
+ * that has just passed, has to take effect on the next visitor rather than at
+ * the end of a revalidation window.
+ */
+export const getShortLink = cache(
+  async (locale: Locale, code: string): Promise<ShortLink | null> => {
+    try {
+      const payload = await getPayload({ config })
+      const result = await payload.find({
+        collection: 'short-links',
+        limit: 1,
+        // Deliberately with locale fallback: a redirect should still land
+        // somewhere when only the Dutch slug of the destination exists.
+        locale,
+        where: { code: { equals: code } },
+      })
+      return result.docs[0] || null
+    } catch (error) {
+      return unavailable(`Short link '${code}' is unavailable`, error)
+    }
+  },
+)

@@ -1184,6 +1184,25 @@ body:has(.site-header--hidden) .about-nav {
   margin-bottom: 0;
 }
 
+.short-link__destination {
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 600;
+  margin: 0 0 34px;
+  overflow-wrap: anywhere;
+}
+.short-link__countdown {
+  margin: 34px 0 0;
+}
+.short-link__stop {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
 .statement__inner,
 .quote-grid {
   align-items: end;

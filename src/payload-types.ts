@@ -71,6 +71,8 @@ export interface Config {
     events: Event;
     registrations: Registration;
     'registration-deliveries': RegistrationDelivery;
+    'short-links': ShortLink;
+    'short-link-clicks': ShortLinkClick;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -85,6 +87,8 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     registrations: RegistrationsSelect<false> | RegistrationsSelect<true>;
     'registration-deliveries': RegistrationDeliveriesSelect<false> | RegistrationDeliveriesSelect<true>;
+    'short-links': ShortLinksSelect<false> | ShortLinksSelect<true>;
+    'short-link-clicks': ShortLinkClicksSelect<false> | ShortLinkClicksSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -797,6 +801,61 @@ export interface RegistrationDelivery {
   createdAt: string;
 }
 /**
+ * Korte adressen onder ichtusleuven.be/… Bezoekers krijgen eerst een bevestigingsscherm met de bestemming.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "short-links".
+ */
+export interface ShortLink {
+  id: number;
+  /**
+   * Alleen zichtbaar in de beheeromgeving, om de link terug te vinden.
+   */
+  title: string;
+  /**
+   * Het stuk na de schuine streep: “weekend” wordt ichtusleuven.be/weekend.
+   */
+  code: string;
+  destination?: {
+    type?: ('url' | 'page' | 'activity') | null;
+    url?: string | null;
+    page?: (number | null) | Page;
+    /**
+     * De activiteit moet een eigen pagina of externe link hebben.
+     */
+    event?: (number | null) | Event;
+  };
+  /**
+   * Uitgevinkt stuurt bezoekers naar de foutpagina in plaats van de bestemming.
+   */
+  active?: boolean | null;
+  /**
+   * Optioneel. Na dit moment werkt de korte link niet meer.
+   */
+  expiresAt?: string | null;
+  /**
+   * Bij benadering. De exacte tellingen staan bij Kliks.
+   */
+  clickCount?: number | null;
+  lastClickedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Kliks ouder dan twaalf maanden worden automatisch opgeruimd.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "short-link-clicks".
+ */
+export interface ShortLinkClick {
+  id: number;
+  link: number | ShortLink;
+  referrer?: string | null;
+  country?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -954,6 +1013,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'registration-deliveries';
         value: number | RegistrationDelivery;
+      } | null)
+    | ({
+        relationTo: 'short-links';
+        value: number | ShortLink;
+      } | null)
+    | ({
+        relationTo: 'short-link-clicks';
+        value: number | ShortLinkClick;
       } | null)
     | ({
         relationTo: 'media';
@@ -1512,6 +1579,39 @@ export interface RegistrationDeliveriesSelect<T extends boolean = true> {
   lastError?: T;
   idempotencyKey?: T;
   encryptedPayload?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "short-links_select".
+ */
+export interface ShortLinksSelect<T extends boolean = true> {
+  title?: T;
+  code?: T;
+  destination?:
+    | T
+    | {
+        type?: T;
+        url?: T;
+        page?: T;
+        event?: T;
+      };
+  active?: T;
+  expiresAt?: T;
+  clickCount?: T;
+  lastClickedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "short-link-clicks_select".
+ */
+export interface ShortLinkClicksSelect<T extends boolean = true> {
+  link?: T;
+  referrer?: T;
+  country?: T;
   updatedAt?: T;
   createdAt?: T;
 }

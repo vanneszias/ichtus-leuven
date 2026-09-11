@@ -23,6 +23,7 @@ import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f
 import { InlineToolbarFeatureClient as InlineToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { default as default_9637bfc1475430d8aa1dc6b81f8292c6 } from '@/components/admin/RegistrationManagement'
 import { default as default_7e878a6ace375a9189fe9b22d4caadd6 } from '@/components/admin/CalendarSyncButton'
+import { default as default_e7c7278368f79bc2f0ee2798dbd9c313 } from '@/components/admin/ShortLinkQR'
 import { default as default_6dd0876da251a80d856e4801c6b009d1 } from '@/components/admin/CalendarHelp'
 import { R2ClientUploadHandler as R2ClientUploadHandler_85cc02ed84006fcc91d3aff39dda669d } from '@payloadcms/storage-r2/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -54,6 +55,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#InlineToolbarFeatureClient": InlineToolbarFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/RegistrationManagement#default": default_9637bfc1475430d8aa1dc6b81f8292c6,
   "@/components/admin/CalendarSyncButton#default": default_7e878a6ace375a9189fe9b22d4caadd6,
+  "@/components/admin/ShortLinkQR#default": default_e7c7278368f79bc2f0ee2798dbd9c313,
   "@/components/admin/CalendarHelp#default": default_6dd0876da251a80d856e4801c6b009d1,
   "@payloadcms/storage-r2/client#R2ClientUploadHandler": R2ClientUploadHandler_85cc02ed84006fcc91d3aff39dda669d,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
