@@ -1516,6 +1516,8 @@ blockquote {
   background: var(--white);
   color: var(--blue);
   display: grid;
+  /* Safari sizes the implicit column from the aspect-ratio mark's min-content and overflows without this. */
+  grid-template-columns: minmax(0, 1fr);
   height: 100%;
   text-decoration: none;
   transition:
