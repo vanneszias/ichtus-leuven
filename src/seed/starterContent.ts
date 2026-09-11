@@ -155,14 +155,65 @@ async function findPageID(
 }
 
 /**
+ * Copies the array row identifiers of an already saved document onto the
+ * matching positions of an incoming one, so a later write updates the rows an
+ * earlier one created rather than replacing them.
+ */
+function withArrayRowIDs(next: unknown, saved: unknown): unknown {
+  if (Array.isArray(next)) {
+    const rows: unknown[] = Array.isArray(saved) ? saved : []
+    return next.map((row, index) => {
+      const previous = rows[index]
+      const merged = withArrayRowIDs(row, previous)
+      const id =
+        previous !== null && typeof previous === 'object'
+          ? (previous as { id?: unknown }).id
+          : undefined
+      return id === undefined || merged === null || typeof merged !== 'object'
+        ? merged
+        : { ...(merged as Record<string, unknown>), id }
+    })
+  }
+
+  if (next !== null && typeof next === 'object') {
+    const previous = (saved !== null && typeof saved === 'object' ? saved : {}) as Record<
+      string,
+      unknown
+    >
+    return Object.fromEntries(
+      Object.entries(next as Record<string, unknown>).map(([key, value]) => [
+        key,
+        withArrayRowIDs(value, previous[key]),
+      ]),
+    )
+  }
+
+  return next
+}
+
+export type ApplyStarterContentOptions = {
+  /**
+   * Whether to write the sample programme. Turn it off when the activities
+   * come from somewhere else - a Google Calendar sync, say - so that a seeded
+   * database never shows fixtures to real visitors.
+   */
+  activities?: boolean
+}
+
+/**
  * Writes the generated starter content into a database.
  *
  * Pages are created as empty drafts first so that internal links between them
  * can be resolved in a second pass, no matter how the pages reference each
  * other. The sample activities follow, so that a fresh database has something
- * for the agenda and the calendar to show.
+ * for the agenda and the calendar to show, unless the caller sources its
+ * activities elsewhere and asks for them to be left out.
  */
-export async function applyStarterContent(payload: Payload, req?: PayloadRequest) {
+export async function applyStarterContent(
+  payload: Payload,
+  req?: PayloadRequest,
+  options: ApplyStarterContentOptions = {},
+) {
   const media = await ensureStarterMedia(payload, req)
   const pages = seedPages()
   const pageIDs: StarterPageIDs = {}
@@ -230,17 +281,28 @@ export async function applyStarterContent(payload: Payload, req?: PayloadRequest
     })
   }
 
+  /**
+   * `navigation` and `footerLinks` are shared arrays carrying localized labels,
+   * so both locales write to one set of rows. Payload only recognises a row it
+   * is handed an `id` for; given none it replaces the array outright and the
+   * locale written first silently loses its labels, leaving the site to fall
+   * back to page titles and raw URLs. Passing the identifiers the first write
+   * produced into the next locale keeps every locale on the same rows.
+   */
+  let savedSettings: SiteSetting | undefined
   for (const locale of LOCALES) {
-    await payload.updateGlobal({
+    const data = starterSiteSettings[locale](media, pageIDs) as SiteSettingsInput
+    savedSettings = await payload.updateGlobal({
       slug: 'site-settings',
       locale,
+      depth: 0,
       overrideAccess: true,
       req,
-      data: starterSiteSettings[locale](media, pageIDs) as SiteSettingsInput,
+      data: savedSettings ? (withArrayRowIDs(data, savedSettings) as SiteSettingsInput) : data,
     })
   }
 
-  const eventIDs = await ensureSampleEvents(payload, media, req)
+  const eventIDs = options.activities === false ? [] : await ensureSampleEvents(payload, media, req)
 
   return { eventIDs, media, pageIDs }
 }

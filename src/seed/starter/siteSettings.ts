@@ -10,7 +10,6 @@ export const starterSiteSettings: StarterSiteSettings = {
     navigation: [
       { link: { label: 'over ons', type: 'internal', page: pages['over-ons'], newTab: false } },
       { link: { label: 'kalender', type: 'internal', page: pages.kalender, newTab: false } },
-      { link: { label: 'eerste keer?', type: 'external', url: '#eerste-keer', newTab: false } },
     ],
     dutchLabel: 'nl',
     englishLabel: 'en',
@@ -43,7 +42,6 @@ export const starterSiteSettings: StarterSiteSettings = {
     navigation: [
       { link: { label: 'about us', type: 'internal', page: pages['about-us'], newTab: false } },
       { link: { label: 'calendar', type: 'internal', page: pages.calendar, newTab: false } },
-      { link: { label: 'first time?', type: 'external', url: '#first-time', newTab: false } },
     ],
     dutchLabel: 'nl',
     englishLabel: 'en',

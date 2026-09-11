@@ -34,7 +34,15 @@ async function seed() {
     throw error
   }
 
-  const { eventIDs, media, pageIDs } = await applyStarterContent(payload)
+  /**
+   * Activities are optional: a site that pulls its programme from the Google
+   * Calendar sync wants the pages and the media, but not a sample programme
+   * sitting in front of real visitors. Set SEED_ACTIVITIES=false to leave the
+   * sample activities out.
+   */
+  const { eventIDs, media, pageIDs } = await applyStarterContent(payload, undefined, {
+    activities: process.env.SEED_ACTIVITIES !== 'false',
+  })
   payload.logger.info(
     `Seeded ${Object.keys(pageIDs).length} page slugs, ${Object.keys(media).length} media files and ${eventIDs.length} activities`,
   )
