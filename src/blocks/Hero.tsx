@@ -128,6 +128,9 @@ export const heroPattern = definePagePattern({
                   priority={imagePriority}
                   sizes={imageSizes}
                   src={curatedPhoto.src}
+                  // Matches ResponsiveMedia and the PhotoStory curated branch, so
+                  // the slot is reserved before the bytes arrive.
+                  style={{ aspectRatio: `${curatedPhoto.width} / ${curatedPhoto.height}` }}
                   width={curatedPhoto.width}
                 />
               ) : null}

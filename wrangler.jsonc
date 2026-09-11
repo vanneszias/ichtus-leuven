@@ -4,6 +4,10 @@
   "name": "ichtus-leuven-local",
   "keep_vars": true,
   "compatibility_date": "2026-08-01",
+  // global_fetch_strictly_public is load-bearing, not incidental: the image
+  // optimizer fetches CMS uploads from this Worker's own public hostname, and
+  // without the flag that request would bypass Workers and look for a zone
+  // origin that does not exist. Removing it breaks every CMS image.
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
@@ -16,7 +20,17 @@
       "database_name": "ichtus-leuven-local"
     }
   ],
-  "r2_buckets": [{ "binding": "R2", "bucket_name": "ichtus-leuven-media-local" }],
+  // The second bucket is the OpenNext incremental cache. It shares the media
+  // bucket because the adapter namespaces every object under
+  // `incremental-cache/<buildId>/`, while the Payload R2 storage adapter writes
+  // media at the root by filename and never lists the bucket. The binding name
+  // is fixed by the adapter and cannot be renamed. Keep the R2 binding first:
+  // src/scripts/preflight.ts and src/scripts/pullRemoteContent.ts both read
+  // r2_buckets[0] positionally.
+  "r2_buckets": [
+    { "binding": "R2", "bucket_name": "ichtus-leuven-media-local" },
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "ichtus-leuven-media-local" }
+  ],
   // Enables Next.js image optimization through Cloudflare Images.
   // Free plan: 5,000 unique transformations per month (see ADR 0006).
   "images": { "binding": "IMAGES" },
@@ -35,7 +49,12 @@
         }
       ],
       "r2_buckets": [
-        { "binding": "R2", "bucket_name": "ichtus-leuven-media-staging", "remote": true }
+        { "binding": "R2", "bucket_name": "ichtus-leuven-media-staging", "remote": true },
+        {
+          "binding": "NEXT_INC_CACHE_R2_BUCKET",
+          "bucket_name": "ichtus-leuven-media-staging",
+          "remote": true
+        }
       ],
       "images": { "binding": "IMAGES" },
       "send_email": [{ "name": "EMAIL" }]
@@ -57,7 +76,12 @@
         }
       ],
       "r2_buckets": [
-        { "binding": "R2", "bucket_name": "ichtus-leuven-media-production", "remote": true }
+        { "binding": "R2", "bucket_name": "ichtus-leuven-media-production", "remote": true },
+        {
+          "binding": "NEXT_INC_CACHE_R2_BUCKET",
+          "bucket_name": "ichtus-leuven-media-production",
+          "remote": true
+        }
       ],
       "images": { "binding": "IMAGES" },
       "send_email": [{ "name": "EMAIL" }]

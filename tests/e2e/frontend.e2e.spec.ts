@@ -205,9 +205,11 @@ test.describe('Frontend', () => {
     await expect(showroom.locator('figcaption').first()).toHaveCSS('font-size', '13px')
     await expect(showroom.locator('img').first()).toHaveCSS('object-fit', 'contain')
     await expect(showroom.locator('img').first()).toHaveCSS('border-radius', '12px')
+    // Seeded media carries a non-deterministic updatedAt, so the version token
+    // in the optimizer's url parameter cannot be asserted literally.
     await expect(showroom.locator('img').first()).toHaveAttribute(
       'src',
-      '/api/media/file/Ichtus-91.jpg',
+      /\/_next\/image\?url=%2Fapi%2Fmedia%2Ffile%2FIchtus-91\.jpg/,
     )
     await expect(showroom.locator('img').first()).toHaveAttribute('alt', '')
 

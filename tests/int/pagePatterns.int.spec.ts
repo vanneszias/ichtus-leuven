@@ -193,8 +193,10 @@ describe('Page Pattern contract', () => {
 
     expect(html).toContain('loading="lazy"')
     expect(html).toContain('object-position:25% 70%')
-    expect(html).toContain('src="/api/media/file/community.webp"')
-    expect(html).not.toContain('/_next/image')
+    // CMS uploads go through the optimizer, and the source carries a version
+    // token derived from updatedAt so the file route can answer `immutable`.
+    expect(html).toContain('/_next/image')
+    expect(html).toContain('url=%2Fapi%2Fmedia%2Ffile%2Fcommunity.webp%3Fv%3D0')
     expect(missingAlt).toBe('')
   })
 

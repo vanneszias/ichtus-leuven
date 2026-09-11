@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { ButtonLink } from '@/components/ui/SmartLink'
 import type { Locale } from '@/lib/content'
 import type { SiteLink } from '@/lib/links'
+import { mediaSource } from '@/lib/media'
 import type { Media } from '@/payload-types'
 
 export const lines = (value?: string | null) => (value || '').split('\n')
@@ -52,6 +53,8 @@ export function ResponsiveMedia({
   sizes?: string
 }) {
   if (!media || typeof media === 'number' || !media.url) return null
+  const src = mediaSource(media)
+  if (!src) return null
   const alt = media.isDecorative ? '' : media.alt?.trim()
   if (!media.isDecorative && !alt) return null
   const x = media.focalPosition?.x ?? 50
@@ -69,13 +72,10 @@ export function ResponsiveMedia({
       loading={priority ? undefined : 'lazy'}
       priority={priority}
       sizes={sizes}
-      src={media.url}
+      src={src}
       // The explicit ratio keeps layouts stable (no CLS) even where CSS
       // sizes one dimension as auto, e.g. the photo showroom.
       style={{ aspectRatio: `${width} / ${height}`, objectPosition: `${x}% ${y}%` }}
-      // OpenNext resolves relative optimized URLs through the static-assets
-      // binding, while Payload serves these files dynamically from R2.
-      unoptimized={media.url.startsWith('/api/media/file/')}
       width={width}
     />
   )

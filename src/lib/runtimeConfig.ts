@@ -101,8 +101,8 @@ function required(name: RuntimeVariableName) {
   return configured
 }
 
-export function siteURL() {
-  const configured = runtimeValue('NEXT_PUBLIC_SITE_URL')
+export function siteURL(env: Record<string, string | undefined> = process.env) {
+  const configured = runtimeValue('NEXT_PUBLIC_SITE_URL', env)
   const url = new URL(configured || DEVELOPMENT_SITE_URL)
   if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:')
     throw new Error('NEXT_PUBLIC_SITE_URL must use HTTPS in production')

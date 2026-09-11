@@ -64,7 +64,18 @@ export const contentPattern = definePagePattern({
         <div className="prose">
           {block.image && (
             <figure className="content-media">
-              <ResponsiveMedia media={block.image} />
+              {/* The prose column is the 0.8fr half of a 1.05fr/0.8fr grid inside
+                  a max-1200px container, so it settles at 476px and collapses to
+                  a single column at 850px. The shared default assumes 50vw/600px
+                  and over-fetches here. */}
+              <ResponsiveMedia
+                media={block.image}
+                sizes={
+                  block.layout === 'centered'
+                    ? '(max-width: 680px) calc(100vw - 28px), 680px'
+                    : '(max-width: 680px) calc(100vw - 28px), (max-width: 850px) calc(100vw - 64px), (max-width: 1264px) calc(40vw - 28px), 476px'
+                }
+              />
             </figure>
           )}
           {block.body && (

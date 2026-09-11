@@ -13,6 +13,15 @@ export function middleware(request: NextRequest) {
   if (!isProductionDeployment()) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
+  // Next marks every dynamic render `no-store`, which is the one directive that
+  // disqualifies a page from the back/forward cache. These pages still are not
+  // stored by shared caches and still revalidate on every navigation; they just
+  // become bfcache-eligible. Scoped to the locale prefixes so /api and /admin
+  // keep their own headers, and set before the two no-store branches below so
+  // those keep overriding it.
+  if (/^\/(?:nl|en)(?:\/|$)/.test(request.nextUrl.pathname)) {
+    response.headers.set('Cache-Control', 'private, max-age=0, must-revalidate')
+  }
   if (/^\/(?:nl|en)\/registration\/cancel\//.test(request.nextUrl.pathname)) {
     response.headers.set('Cache-Control', 'no-store')
     response.headers.set('Referrer-Policy', 'no-referrer')

@@ -1,11 +1,17 @@
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
 
+# `immutable` is not just a caching hint here: the image optimizer only attaches
+# Cache-Control to its own output when the upstream response carries that word
+# (OpenNext createImageResponse), so without it every optimized variant of these
+# files is re-fetched and re-transformed on every view. The cost is that these
+# names are not content-hashed, so replacing a curated asset means giving it a
+# new filename rather than overwriting it.
 /photos/*
-  Cache-Control: public,max-age=604800,stale-while-revalidate=86400
+  Cache-Control: public,max-age=604800,stale-while-revalidate=86400,immutable
 
 /logos/*
-  Cache-Control: public,max-age=604800,stale-while-revalidate=86400
+  Cache-Control: public,max-age=604800,stale-while-revalidate=86400,immutable
 
 /fonts/*
   Cache-Control: public,max-age=2592000,stale-while-revalidate=86400

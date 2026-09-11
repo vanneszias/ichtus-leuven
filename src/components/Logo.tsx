@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import type { Locale } from '@/lib/content'
+import { mediaSource } from '@/lib/media'
 import type { Media, SiteSetting } from '@/payload-types'
 
 export function Logo({
@@ -17,6 +18,12 @@ export function Logo({
 }) {
   const selected = (footer ? settings.footerLogo : settings.logo) || settings.logo
   const media = typeof selected === 'object' ? (selected as Media) : null
+  // Deliberately no `sizes`: a fixed-pixel value would put next/image on its
+  // w-descriptor branch and emit the full srcset, burning a transformation per
+  // width on a wordmark that paints at 66px tall. Without it the image gets a
+  // two-entry 1x/2x srcset instead. No `priority` either -- .logo__current is
+  // opacity 0 until hover or focus, so it must not compete with the hero LCP.
+  const src = media ? mediaSource(media) : null
 
   return (
     <Link
@@ -27,8 +34,8 @@ export function Logo({
       <span className="logo__stage">
         <span aria-hidden="true" className="logo__crest" />
         <span className={`logo__current${media ? ' logo__current--image' : ''}`}>
-          {media?.url ? (
-            <Image alt="" height={media.height || 100} src={media.url} width={media.width || 240} />
+          {src ? (
+            <Image alt="" height={media?.height || 100} src={src} width={media?.width || 240} />
           ) : (
             <svg
               aria-hidden="true"

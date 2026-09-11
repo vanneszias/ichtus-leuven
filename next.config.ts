@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: `default-src 'self'; base-uri 'self'; connect-src 'self' https://challenges.cloudflare.com https://www.googleapis.com${analyticsOrigin}; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; frame-src 'self' https://challenges.cloudflare.com; img-src 'self' blob: data: https:; object-src 'none'; ${scriptSource}; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests`,
           },
+          // Severs the opener relationship for cross-origin windows, which is
+          // what Lighthouse's origin-isolation audit asks for. `allow-popups`
+          // rather than the stricter `same-origin` so that any window this or
+          // the Payload admin opens keeps working; nothing here needs full
+          // cross-origin isolation.
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
           { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=()' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
@@ -101,8 +107,20 @@ const nextConfig: NextConfig = {
     // wide, and every extra width consumes one of Cloudflare Images' 5,000
     // free unique transformations per image per month.
     deviceSizes: [360, 640, 750, 828, 1080, 1440, 1920],
+    // Narrow the fixed-width candidates too. The default list starts at 16px, so
+    // a low-vw slot pulls in tiny widths nobody renders; capping it here keeps
+    // every slot at nine srcset entries.
+    imageSizes: [256, 384],
+    // AVIF first: the optimizer picks the first listed format the client
+    // announces in Accept, so anything without AVIF support still gets WebP.
+    // Free against the quota -- Cloudflare bills one transformation per image
+    // and parameter set regardless of how many output formats it serves.
+    formats: ['image/avif', 'image/webp'],
     localPatterns: [
       {
+        // Only reachable from `next dev`, where mediaSource() keeps CMS URLs
+        // relative for the built-in optimizer. Deployed, they are absolute and
+        // matched by remotePatterns instead.
         pathname: '/api/media/file/**',
       },
       {
@@ -111,6 +129,17 @@ const nextConfig: NextConfig = {
       {
         pathname: '/photos/**',
       },
+    ],
+    // CMS uploads are addressed absolutely on deployed environments. The
+    // OpenNext optimizer resolves relative sources through the static-assets
+    // binding, which cannot see the R2 objects Payload streams, so only the
+    // absolute form reaches them (see src/lib/media.ts). Patterns are baked into
+    // the images manifest at build time and production ships the bundle staging
+    // built, so every hostname one artifact can answer on must be listed here.
+    remotePatterns: [
+      { hostname: 'ichtusleuven.be', pathname: '/api/media/file/**', protocol: 'https' },
+      { hostname: '*.ichtusleuven.be', pathname: '/api/media/file/**', protocol: 'https' },
+      { hostname: '*.workers.dev', pathname: '/api/media/file/**', protocol: 'https' },
     ],
   },
   // Packages with Cloudflare Workers (workerd) specific code

@@ -139,5 +139,15 @@ export const Media: CollectionConfig = {
     crop: false,
     focalPoint: false,
     mimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+    // The R2 storage adapter stores only a content type on the object, so these
+    // responses shipped with no Cache-Control at all: nothing cached at the edge,
+    // and the image optimizer treated its own output as uncacheable too, because
+    // OpenNext only marks an optimized image immutable when the upstream header
+    // says so. `immutable` is safe because mediaSource() versions the URL by the
+    // document's updatedAt, so replacing a file yields a different URL.
+    modifyResponseHeaders: ({ headers }) => {
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable')
+      return headers
+    },
   },
 }

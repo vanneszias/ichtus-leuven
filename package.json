@@ -10,6 +10,7 @@
     "deploy:prod": "cross-env NODE_ENV=production PAYLOAD_DB_PUSH=false CLOUDFLARE_REMOTE=true CLOUDFLARE_ENV=production sh -c 'tsx src/scripts/preflight.ts --env=production && payload migrate && wrangler d1 execute D1 --command \"PRAGMA optimize\" --env=production --remote && opennextjs-cloudflare deploy --env=production && tsx src/scripts/syncRuntimeConfig.ts && tsx src/scripts/deployScheduler.ts'",
     "deploy:staging": "cross-env NODE_ENV=production PAYLOAD_DB_PUSH=false CLOUDFLARE_REMOTE=true CLOUDFLARE_ENV=staging sh -c 'tsx src/scripts/preflight.ts --env=staging && payload migrate && wrangler d1 execute D1 --command \"PRAGMA optimize\" --env=staging --remote && opennextjs-cloudflare build --env=staging && opennextjs-cloudflare deploy --env=staging && tsx src/scripts/syncRuntimeConfig.ts && tsx src/scripts/deployScheduler.ts'",
     "dev": "rm -rf .next .open-next && cross-env NODE_OPTIONS=--no-deprecation next dev --webpack",
+    "preview": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" sh -c \"opennextjs-cloudflare build && opennextjs-cloudflare preview\"",
     "pull:prod": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_DB_PUSH=false tsx src/scripts/pullRemoteContent.ts --env=production",
     "pull:staging": "cross-env NODE_OPTIONS=--no-deprecation PAYLOAD_DB_PUSH=false tsx src/scripts/pullRemoteContent.ts --env=staging",
     "seed:local": "cross-env NODE_OPTIONS=--no-deprecation CLOUDFLARE_REMOTE=false tsx src/scripts/seed.ts",
