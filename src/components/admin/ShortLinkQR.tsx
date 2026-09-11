@@ -1,37 +1,13 @@
 'use client'
 
 import { useFormFields } from '@payloadcms/ui'
-import qrcode from 'qrcode-generator'
 import { useEffect, useMemo, useState } from 'react'
 
-/** Quiet zone in modules. Four is the specification minimum for a scan. */
-const MARGIN = 4
-const PNG_TARGET_PIXELS = 1024
+import { QR_BACKGROUND, QR_COLOUR, type QrArtwork, qrArtwork, qrSVG } from '@/lib/qrCode'
+import { wordmark } from '@/lib/wordmark'
 
-function buildCode(url: string) {
-  // Type 0 picks the smallest version that fits; correction level M keeps the
-  // code readable when a poster gets a fold or a scuff across it.
-  const code = qrcode(0, 'M')
-  code.addData(url)
-  code.make()
-  const count = code.getModuleCount()
-  const modules = Array.from({ length: count }, (_, row) =>
-    Array.from({ length: count }, (_, column) => code.isDark(row, column)),
-  )
-  const path = modules
-    .flatMap((cells, row) => cells.map((dark, column) => (dark ? `M${column} ${row}h1v1h-1z` : '')))
-    .join('')
-  return { count, modules, path, size: count + MARGIN * 2 }
-}
-
-function svgMarkup(path: string, size: number) {
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size * 8}" height="${size * 8}" shape-rendering="crispEdges">`,
-    `<rect width="${size}" height="${size}" fill="#ffffff"/>`,
-    `<path transform="translate(${MARGIN} ${MARGIN})" d="${path}" fill="#000000"/>`,
-    '</svg>',
-  ].join('')
-}
+const PREVIEW_PIXELS = 220
+const PNG_PIXELS = 1024
 
 function save(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
@@ -42,19 +18,23 @@ function save(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-function savePNG(modules: boolean[][], size: number, filename: string) {
-  const scale = Math.max(1, Math.round(PNG_TARGET_PIXELS / size))
+function savePNG(artwork: QrArtwork, filename: string) {
   const canvas = document.createElement('canvas')
-  canvas.height = size * scale
-  canvas.width = size * scale
+  canvas.height = PNG_PIXELS
+  canvas.width = PNG_PIXELS
   const context = canvas.getContext('2d')
   if (!context) return
-  context.fillStyle = '#ffffff'
-  context.fillRect(0, 0, canvas.width, canvas.height)
-  context.fillStyle = '#000000'
-  for (const [row, cells] of modules.entries())
-    for (const [column, dark] of cells.entries())
-      if (dark) context.fillRect((column + MARGIN) * scale, (row + MARGIN) * scale, scale, scale)
+  context.fillStyle = QR_BACKGROUND
+  context.fillRect(0, 0, PNG_PIXELS, PNG_PIXELS)
+  // The paths are in module units, so one scale puts the whole drawing — the
+  // same one the SVG carries — into pixels.
+  context.scale(PNG_PIXELS / artwork.size, PNG_PIXELS / artwork.size)
+  context.fillStyle = QR_COLOUR
+  context.fill(new Path2D(artwork.dataPath))
+  context.fill(new Path2D(artwork.eyesPath), 'evenodd')
+  context.translate(artwork.wordmark.x, artwork.wordmark.y)
+  context.scale(artwork.wordmark.scale, artwork.wordmark.scale)
+  context.fill(new Path2D(wordmark.path))
   canvas.toBlob((blob) => blob && save(blob, filename))
 }
 
@@ -70,9 +50,9 @@ export default function ShortLinkQR() {
   useEffect(() => setOrigin(window.location.origin), [])
 
   const url = code && origin ? `${origin}/${code}` : ''
-  const qr = useMemo(() => (url ? buildCode(url) : null), [url])
+  const artwork = useMemo(() => (url ? qrArtwork(url) : null), [url])
 
-  if (!qr)
+  if (!artwork)
     return (
       <div style={{ background: 'var(--theme-elevation-50)', borderRadius: 4, padding: 16 }}>
         Vul een code in om de QR-code te zien.
@@ -83,12 +63,19 @@ export default function ShortLinkQR() {
     <div style={{ background: 'var(--theme-elevation-50)', borderRadius: 4, padding: 16 }}>
       <svg
         aria-label={`QR-code voor ${url}`}
+        height={PREVIEW_PIXELS}
         role="img"
-        shapeRendering="crispEdges"
-        style={{ background: '#ffffff', display: 'block', height: 200, width: 200 }}
-        viewBox={`0 0 ${qr.size} ${qr.size}`}
+        style={{ background: QR_BACKGROUND, borderRadius: 4, display: 'block' }}
+        viewBox={`0 0 ${artwork.size} ${artwork.size}`}
+        width={PREVIEW_PIXELS}
       >
-        <path d={qr.path} fill="#000000" transform={`translate(${MARGIN} ${MARGIN})`} />
+        <path d={artwork.dataPath} fill={QR_COLOUR} shapeRendering="crispEdges" />
+        <path d={artwork.eyesPath} fill={QR_COLOUR} fillRule="evenodd" />
+        <g
+          transform={`translate(${artwork.wordmark.x} ${artwork.wordmark.y}) scale(${artwork.wordmark.scale})`}
+        >
+          <path d={wordmark.path} fill={QR_COLOUR} />
+        </g>
       </svg>
       <p style={{ margin: '12px 0', wordBreak: 'break-all' }}>
         <code>{url}</code>
@@ -97,10 +84,7 @@ export default function ShortLinkQR() {
         <button
           className="btn btn--style-secondary btn--size-small"
           onClick={() =>
-            save(
-              new Blob([svgMarkup(qr.path, qr.size)], { type: 'image/svg+xml' }),
-              `${code}-qr.svg`,
-            )
+            save(new Blob([qrSVG(artwork)], { type: 'image/svg+xml' }), `${code}-qr.svg`)
           }
           type="button"
         >
@@ -108,7 +92,7 @@ export default function ShortLinkQR() {
         </button>
         <button
           className="btn btn--style-secondary btn--size-small"
-          onClick={() => savePNG(qr.modules, qr.size, `${code}-qr.png`)}
+          onClick={() => savePNG(artwork, `${code}-qr.png`)}
           type="button"
         >
           Download PNG
