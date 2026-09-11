@@ -1015,7 +1015,7 @@ body:has(.site-header--hidden) .about-nav {
   text-transform: none;
   text-underline-offset: 3px;
 }
-/* The intro, the calendar download, the editorial prose and the map stack
+/* The intro, the editorial prose, the map and the calendar download stack
    inside the same column as the title rather than each opening a band of its
    own: the page stays one arrival, and the signup card beside it keeps its
    place level with the heading. */
@@ -1023,22 +1023,37 @@ body:has(.site-header--hidden) .about-nav {
   margin-top: 34px;
   max-width: 640px;
 }
+/* The map and the calendar download share one row, bottom-aligned, so the
+   two practical answers — where, and when in my week — read as a pair and the
+   description reaches the visitor sooner. */
+.activity-place {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 34px;
+}
 .activity-map {
   aspect-ratio: 16 / 10;
   background: var(--white);
   border: var(--border);
   border-radius: var(--radius);
   display: block;
-  margin-top: 34px;
+  flex: 1 1 300px;
   width: 100%;
 }
 /* What stands in for the map where no embed key is configured, so the page
    still says where to be. It carries the same voice the date above it does. */
 .activity-location {
+  flex: 1 1 300px;
   font-family: var(--mono);
   font-size: 13px;
-  margin: 34px 0 0;
+  margin: 0;
   text-transform: uppercase;
+}
+.activity-place .button {
+  flex: none;
+  margin-top: 0;
 }
 .signup-card {
   background: var(--white);

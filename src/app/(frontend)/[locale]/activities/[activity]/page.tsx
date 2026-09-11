@@ -191,13 +191,18 @@ export default async function ActivityPage({ params }: Props) {
                 <strong>{date}</strong>
               </p>
               {event.summary && <p className="lead">{event.summary}</p>}
-              <AddToCalendarButton href={`${canonical.href}/calendar.ics`} locale={locale} />
               {event.body && (
                 <div className="prose activity-body">
                   <RichContent data={event.body} locale={locale} />
                 </div>
               )}
-              {event.location && <ActivityLocation locale={locale} location={event.location} />}
+              {/* Where to be and how to remember it belong together at the foot
+                of the page, so the activity's own story is what follows the
+                title instead of a download button. */}
+              <div className="activity-place">
+                {event.location && <ActivityLocation locale={locale} location={event.location} />}
+                <AddToCalendarButton href={`${canonical.href}/calendar.ics`} locale={locale} />
+              </div>
             </div>
             {registrationOffered && (
               // <fieldset> is Biome's suggestion for role="group", but this card
