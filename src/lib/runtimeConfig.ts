@@ -36,6 +36,12 @@ export const runtimeConfiguration = {
     validate: (value) => (emailPattern.test(value) ? undefined : 'must be a valid email address'),
   },
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: { deployRequired: true },
+  // Analytics are configured for production only, so staging must stay
+  // deployable without them. Only server-side events need the secret, which
+  // this site does not send today.
+  NEXT_PUBLIC_OPENPANEL_CLIENT_ID: {},
+  NEXT_PUBLIC_OPENPANEL_API_URL: { validate: httpsURL },
+  OPENPANEL_CLIENT_SECRET: { minLength: 20 },
   TURNSTILE_SECRET_KEY: { deployRequired: true, minLength: 20 },
   REGISTRATION_CLEANUP_SECRET: { deployRequired: true, minLength: 32 },
   REGISTRATION_DELIVERY_KEY: {
@@ -121,6 +127,15 @@ export function emailConfig() {
 
 export function turnstileSiteKey() {
   return runtimeValue('NEXT_PUBLIC_TURNSTILE_SITE_KEY')
+}
+
+// Analytics stay off unless both values are configured, which keeps local
+// development and the test environments out of the reporting.
+export function analyticsConfig() {
+  const apiURL = runtimeValue('NEXT_PUBLIC_OPENPANEL_API_URL')
+  const clientID = runtimeValue('NEXT_PUBLIC_OPENPANEL_CLIENT_ID')
+  if (!apiURL || !clientID) return undefined
+  return { apiURL, clientID, origin: new URL(apiURL).origin }
 }
 
 export function requiredSecret(

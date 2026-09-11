@@ -9,6 +9,8 @@ const validEnvironment = {
   EMAIL_FROM_ADDRESS: 'hello@example.org',
   EMAIL_REPLY_TO: 'reply@example.org',
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: 'site-key',
+  NEXT_PUBLIC_OPENPANEL_CLIENT_ID: 'openpanel-client-id',
+  NEXT_PUBLIC_OPENPANEL_API_URL: 'https://analytics.example.org/api',
   TURNSTILE_SECRET_KEY: 't'.repeat(20),
   REGISTRATION_CLEANUP_SECRET: 'c'.repeat(32),
   REGISTRATION_DELIVERY_KEY: 'a'.repeat(64),

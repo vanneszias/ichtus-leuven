@@ -1,10 +1,20 @@
 import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 
+// The self-hosted OpenPanel instance serves both the tracker script and the
+// endpoint it reports to, so one origin covers script-src and connect-src. It
+// is a constant rather than a read of NEXT_PUBLIC_OPENPANEL_API_URL because
+// production deploys the bundle the staging workflow built, so a build-time
+// read would bake staging's configuration into the production policy. Merely
+// allowing the origin tracks nobody; whether a tracker renders at all is
+// decided per environment by NEXT_PUBLIC_OPENPANEL_CLIENT_ID at runtime. Keep
+// this host and NEXT_PUBLIC_OPENPANEL_API_URL pointing at the same instance.
+const analyticsOrigin = ' https://analytics.zias.be'
+
 const scriptSource =
   process.env.NODE_ENV === 'development'
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com"
-    : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com"
+    ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com${analyticsOrigin}`
+    : `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${analyticsOrigin}`
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -14,7 +24,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: `default-src 'self'; base-uri 'self'; connect-src 'self' https://challenges.cloudflare.com https://www.googleapis.com; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; frame-src 'self' https://challenges.cloudflare.com; img-src 'self' blob: data: https:; object-src 'none'; ${scriptSource}; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests`,
+            value: `default-src 'self'; base-uri 'self'; connect-src 'self' https://challenges.cloudflare.com https://www.googleapis.com${analyticsOrigin}; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; frame-src 'self' https://challenges.cloudflare.com; img-src 'self' blob: data: https:; object-src 'none'; ${scriptSource}; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests`,
           },
           { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=()' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

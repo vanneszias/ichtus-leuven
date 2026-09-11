@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import type React from 'react'
 import '@fontsource-variable/instrument-sans'
 import './styles.css'
+import { Analytics } from '@/components/Analytics'
 import { siteURL } from '@/lib/runtimeConfig'
 import {
   createGlobalStructuredData,
@@ -67,6 +68,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
           {locale === 'nl' ? 'Naar de inhoud' : 'Skip to content'}
         </a>
         {children}
+        <Analytics />
       </body>
     </html>
   )

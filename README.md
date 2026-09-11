@@ -96,6 +96,22 @@ REGISTRATION_CLEANUP_SECRET=
 
 Turnstile is mandatory in production and intentionally bypassed in local development when no key is configured. The dedicated scheduler Worker calls `/api/registration-delivery-process` and `/api/registration-cleanup` every five minutes; the cleanup endpoint drains bounded batches for up to 20 seconds, reports `timedOut` when it exhausts that budget and reports `needsContinuation` when timed-out or deferred work needs a future run. Also configure a Cloudflare rate-limiting rule for `/api/activity-signup`.
 
+## Analytics
+
+Traffic is measured with a self-hosted [OpenPanel](https://openpanel.dev) instance, which serves both the tracker script and the endpoint it reports to. Configure the project from its OpenPanel settings:
+
+```env
+NEXT_PUBLIC_OPENPANEL_CLIENT_ID=
+NEXT_PUBLIC_OPENPANEL_API_URL=https://analytics.zias.be/api
+OPENPANEL_CLIENT_SECRET=
+```
+
+The OpenPanel client rejects browser events from origins outside its CORS allow list with `Ingestion: Invalid cors or secret`, so add the deployed hostnames to the client in the OpenPanel dashboard. Only the two public values are required; the client secret exists for server-side events, which the site does not send today.
+
+Analytics are configured in the production environment only. Nothing is required for a deploy: leaving the client id unset disables the tracker entirely, which is why staging, local development and the test suites never report. The analytics origin is a constant in the Content-Security-Policy rather than a build-time read, because production deploys the bundle the staging workflow built; allowing the origin tracks nobody by itself. Point that constant and `NEXT_PUBLIC_OPENPANEL_API_URL` at the same instance.
+
+Tracking is cookieless, records screen views only, and drops any event whose path is an editor preview or a registration cancellation link, because those paths carry a secret cancellation token.
+
 ## Google Calendar
 
 Create a Google API key with read access to the selected public calendar, then configure:
