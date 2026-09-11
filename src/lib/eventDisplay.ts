@@ -24,7 +24,8 @@ function visibleAllDayEnd(event: Pick<Event, 'allDay' | 'endsAt' | 'source' | 's
   return event.allDay && event.source === 'google' ? new Date(endsAt.getTime() - DAY_IN_MS) : endsAt
 }
 
-function localDateKey(date: Date) {
+/** The calendar day a moment falls on in Brussels, as `YYYY-MM-DD`. */
+export function brusselsDateKey(date: Date) {
   return new Intl.DateTimeFormat('en-CA', {
     day: '2-digit',
     month: '2-digit',
@@ -67,7 +68,7 @@ export function formatEventDisplay(
     minute: '2-digit',
     timeZone: EVENT_TIME_ZONE,
   })
-  const isMultiDay = Boolean(endsAt && localDateKey(startsAt) !== localDateKey(endsAt))
+  const isMultiDay = Boolean(endsAt && brusselsDateKey(startsAt) !== brusselsDateKey(endsAt))
 
   return {
     cardDate: endsAt && isMultiDay ? date.formatRange(startsAt, endsAt) : date.format(startsAt),

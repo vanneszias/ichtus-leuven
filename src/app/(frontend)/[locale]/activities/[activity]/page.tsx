@@ -3,11 +3,14 @@ import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
+import { ActivityLocation } from '@/components/activities/ActivityLocation'
+import { AddToCalendarButton } from '@/components/activities/AddToCalendarButton'
 import { RegistrationForm } from '@/components/registrations/RegistrationForm'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteHeader } from '@/components/SiteHeader'
+import { RichContent } from '@/components/ui/RichContent'
 import { Container, Section } from '@/components/ui/Section'
-import { SmartLink } from '@/components/ui/SmartLink'
+import { ButtonLink } from '@/components/ui/SmartLink'
 import {
   getEvent,
   getEventBySlug,
@@ -138,6 +141,11 @@ export default async function ActivityPage({ params }: Props) {
         ? 'open'
         : 'closed'
       : availability
+  // Most activities simply have no registration — you turn up. Saying
+  // "registration is closed" about one of those invents a door that was never
+  // there, so the card only appears where an editor arranged a way in.
+  const registrationOffered =
+    event.registrationMode === 'internal' || event.registrationMode === 'external'
   const socialImage = resolveSocialImage(
     event.image,
     settings.defaultImage,
@@ -174,68 +182,82 @@ export default async function ActivityPage({ params }: Props) {
       />
       <main id="main-content" tabIndex={-1}>
         <Section className="activity-detail" spacing="spacious" theme="yellow">
-          <Container className="activity-detail__grid">
+          <Container
+            className={`activity-detail__grid${registrationOffered ? '' : ' activity-detail__grid--single'}`}
+          >
             <div>
               <h1>{event.title}</h1>
               <p className="activity-meta">
                 <strong>{date}</strong>
-                {event.location && (
-                  <span>
-                    {event.location}{' '}
-                    <SmartLink
-                      className="activity-meta__directions"
+              </p>
+              {event.summary && <p className="lead">{event.summary}</p>}
+              <AddToCalendarButton href={`${canonical.href}/calendar.ics`} locale={locale} />
+              {event.body && (
+                <div className="prose activity-body">
+                  <RichContent data={event.body} locale={locale} />
+                </div>
+              )}
+              {event.location && <ActivityLocation locale={locale} location={event.location} />}
+            </div>
+            {registrationOffered && (
+              // <fieldset> is Biome's suggestion for role="group", but this card
+              // holds a heading, prose and a form component rather than a set of
+              // form controls with a legend, so the explicit role stays.
+              // biome-ignore lint/a11y/useSemanticElements: not a fieldset, see above
+              <div
+                aria-label={locale === 'nl' ? 'Inschrijven' : 'Registration'}
+                className="signup-card"
+                role="group"
+              >
+                {structuredAvailability !== 'open' ? (
+                  <p>{unavailableMessage}</p>
+                ) : event.registrationMode === 'external' ? (
+                  <>
+                    <h2>{locale === 'nl' ? 'Schrijf je in.' : 'Sign up.'}</h2>
+                    <p>
+                      {locale === 'nl'
+                        ? 'De inschrijvingen voor deze activiteit lopen via een andere pagina.'
+                        : 'Registration for this activity is handled on another page.'}
+                    </p>
+                    <ButtonLink
                       link={{
-                        label: locale === 'nl' ? 'Route' : 'Directions',
+                        label: locale === 'nl' ? 'Inschrijven' : 'Register',
                         newTab: true,
                         type: 'external',
-                        url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`,
+                        url: event.registrationUrl,
                       }}
                       locale={locale}
                     />
-                  </span>
+                  </>
+                ) : isFull && !event.waitlistEnabled ? (
+                  <p>{locale === 'nl' ? 'Deze activiteit is vol.' : 'This activity is full.'}</p>
+                ) : (
+                  <>
+                    <h2>
+                      {isFull
+                        ? locale === 'nl'
+                          ? 'Wachtlijst'
+                          : 'Waitlist'
+                        : locale === 'nl'
+                          ? 'Er is plek.'
+                          : 'There is room.'}
+                    </h2>
+                    {isFull && (
+                      <p>
+                        {locale === 'nl'
+                          ? 'Schrijf je in en we mailen je zodra er een plaats vrijkomt.'
+                          : 'Join the waitlist and we will email you as soon as a place opens up.'}
+                      </p>
+                    )}
+                    <RegistrationForm
+                      eventID={event.id}
+                      locale={locale}
+                      turnstileSiteKey={turnstileSiteKey()}
+                    />
+                  </>
                 )}
-              </p>
-              {event.summary && <p className="lead">{event.summary}</p>}
-            </div>
-            {/* <fieldset> is Biome's suggestion for role="group", but this card
-                holds a heading, prose and a form component rather than a set of
-                form controls with a legend, so the explicit role stays. */}
-            {/* biome-ignore lint/a11y/useSemanticElements: not a fieldset, see above */}
-            <div
-              aria-label={locale === 'nl' ? 'Inschrijven' : 'Registration'}
-              className="signup-card"
-              role="group"
-            >
-              {availability !== 'open' ? (
-                <p>{unavailableMessage}</p>
-              ) : isFull && !event.waitlistEnabled ? (
-                <p>{locale === 'nl' ? 'Deze activiteit is vol.' : 'This activity is full.'}</p>
-              ) : (
-                <>
-                  <h2>
-                    {isFull
-                      ? locale === 'nl'
-                        ? 'Wachtlijst'
-                        : 'Waitlist'
-                      : locale === 'nl'
-                        ? 'Er is plek.'
-                        : 'There is room.'}
-                  </h2>
-                  {isFull && (
-                    <p>
-                      {locale === 'nl'
-                        ? 'Schrijf je in en we mailen je zodra er een plaats vrijkomt.'
-                        : 'Join the waitlist and we will email you as soon as a place opens up.'}
-                    </p>
-                  )}
-                  <RegistrationForm
-                    eventID={event.id}
-                    locale={locale}
-                    turnstileSiteKey={turnstileSiteKey()}
-                  />
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </Container>
         </Section>
       </main>

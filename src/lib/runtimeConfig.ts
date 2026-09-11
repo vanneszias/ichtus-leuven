@@ -36,6 +36,11 @@ export const runtimeConfiguration = {
     validate: (value) => (emailPattern.test(value) ? undefined : 'must be a valid email address'),
   },
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: { deployRequired: true },
+  // The activity page embeds a map of its location when a key is configured
+  // and falls back to the plain directions link when it is not, so no
+  // environment has to hold one to stay deployable. Public by nature: the key
+  // travels in the iframe URL the browser requests.
+  NEXT_PUBLIC_GOOGLE_MAPS_EMBED_KEY: {},
   // Analytics are configured for production only, so staging must stay
   // deployable without them. Only server-side events need the secret, which
   // this site does not send today.
@@ -127,6 +132,10 @@ export function emailConfig() {
 
 export function turnstileSiteKey() {
   return runtimeValue('NEXT_PUBLIC_TURNSTILE_SITE_KEY')
+}
+
+export function mapsEmbedKey() {
+  return runtimeValue('NEXT_PUBLIC_GOOGLE_MAPS_EMBED_KEY')
 }
 
 // Analytics stay off unless both values are configured, which keeps local

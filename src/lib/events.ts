@@ -104,7 +104,9 @@ export function eventTypeSurface(eventType: Event['eventType']) {
  * exclusive. An editor enters the last day the activity runs, so a manually
  * maintained all-day activity gains a day on its way into the grid.
  */
-function calendarEnd(event: Event): string | undefined {
+export function calendarEnd(
+  event: Pick<Event, 'allDay' | 'endsAt' | 'source' | 'startsAt'>,
+): string | undefined {
   if (!event.endsAt) return undefined
   const end = new Date(event.endsAt)
   if (end < new Date(event.startsAt)) return undefined

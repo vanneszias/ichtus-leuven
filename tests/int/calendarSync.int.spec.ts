@@ -1,6 +1,7 @@
 import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { synchronizeCalendarSource } from '../../src/lib/calendarSync'
+import { eventDetailHref } from '../../src/lib/events'
 import config from '../../src/payload.config'
 
 describe('Calendar Source synchronization', () => {
@@ -122,6 +123,12 @@ describe('Calendar Source synchronization', () => {
       eventType: 'wild',
       summary: 'Safe summary',
     })
+    // A calendar entry is not a page: the activity is announced without a link
+    // until an editor turns its page on. The address is reserved all the same,
+    // so turning it on is one setting rather than a slug to invent per locale.
+    expect(created.docs[0].detail).toBe('none')
+    expect(created.docs[0].slug).toBe('wild-calendar-test')
+    expect(eventDetailHref(created.docs[0], 'nl')).toBeNull()
     // The English site reads its own locale without falling back, so a synced
     // activity is seeded there or it is missing from the English agenda.
     const seeded = await payload.findByID({

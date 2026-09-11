@@ -1,6 +1,7 @@
 import type { CollectionConfig, PayloadRequest } from 'payload'
 
 import { activityManagers, publishedOrAuthenticated } from '@/access'
+import { pageRichTextEditor, validatePageRichTextHeadings } from '@/blocks/schemaFields'
 import { eventSlugFromTitle } from '@/lib/events'
 
 /**
@@ -52,7 +53,11 @@ export const Events: CollectionConfig = {
     beforeValidate: [
       async ({ data, originalDoc, req }) => {
         if (!data) return data
-        if ((data.detail ?? originalDoc?.detail ?? 'page') !== 'page') return data
+        // An activity that forwards to somebody else's site never needs an
+        // address here. One that has no page *yet* does: "no page" is a
+        // setting an editor turns off later, and the address has to be waiting
+        // in both locales when they do rather than appear in Dutch alone.
+        if ((data.detail ?? originalDoc?.detail ?? 'page') === 'external') return data
         if (typeof data.slug === 'string' && data.slug.trim()) {
           data.slug = eventSlugFromTitle(data.slug)
           return data
@@ -117,6 +122,19 @@ export const Events: CollectionConfig = {
   fields: [
     { name: 'title', type: 'text', localized: true, required: true },
     { name: 'summary', type: 'textarea', localized: true },
+    {
+      name: 'body',
+      type: 'richText',
+      label: 'Uitgebreide info',
+      localized: true,
+      editor: pageRichTextEditor,
+      validate: validatePageRichTextHeadings,
+      admin: {
+        condition: (_, siblingData) => siblingData?.detail === 'page',
+        description:
+          'Verschijnt onder de samenvatting op de activiteitpagina. Bedoeld voor praktische afspraken, een programma of wat je moet meebrengen.',
+      },
+    },
     {
       name: 'startsAt',
       type: 'date',

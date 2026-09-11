@@ -987,6 +987,13 @@ body:has(.site-header--hidden) .about-nav {
 .activity-detail__grid > * {
   min-width: 0;
 }
+/* An activity nobody has to sign up for has nothing to put in the second
+   column, so the details stop pretending to share the row and take the
+   measure a column of prose wants instead of the full container. */
+.activity-detail__grid--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 760px;
+}
 .activity-detail h1,
 .simple-page h1 {
   font-size: clamp(54px, 7vw, 96px);
@@ -1007,6 +1014,31 @@ body:has(.site-header--hidden) .about-nav {
   margin-left: 8px;
   text-transform: none;
   text-underline-offset: 3px;
+}
+/* The intro, the calendar download, the editorial prose and the map stack
+   inside the same column as the title rather than each opening a band of its
+   own: the page stays one arrival, and the signup card beside it keeps its
+   place level with the heading. */
+.activity-body {
+  margin-top: 34px;
+  max-width: 640px;
+}
+.activity-map {
+  aspect-ratio: 16 / 10;
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  display: block;
+  margin-top: 34px;
+  width: 100%;
+}
+/* What stands in for the map where no embed key is configured, so the page
+   still says where to be. It carries the same voice the date above it does. */
+.activity-location {
+  font-family: var(--mono);
+  font-size: 13px;
+  margin: 34px 0 0;
+  text-transform: uppercase;
 }
 .signup-card {
   background: var(--white);

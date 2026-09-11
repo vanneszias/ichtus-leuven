@@ -1,9 +1,6 @@
-import { RichText } from '@payloadcms/richtext-lexical/react'
-import { cloneElement, isValidElement, type ReactNode } from 'react'
-
 import { ResponsiveMedia } from '@/components/blocks/shared'
+import { RichContent } from '@/components/ui/RichContent'
 import { Container, Section } from '@/components/ui/Section'
-import { NewWindowAnnouncement } from '@/components/ui/SmartLink'
 import { appearanceFields } from '@/fields/appearance'
 
 import { pageRichTextEditor, validatePageRichTextHeadings } from './schemaFields'
@@ -78,37 +75,7 @@ export const contentPattern = definePagePattern({
               />
             </figure>
           )}
-          {block.body && (
-            <RichText
-              converters={({ defaultConverters }) => {
-                const appendAnnouncement = (converted: ReactNode, newTab?: boolean | null) => {
-                  if (!newTab || !isValidElement<{ children?: ReactNode }>(converted))
-                    return converted
-                  return cloneElement(
-                    converted,
-                    undefined,
-                    converted.props.children,
-                    <NewWindowAnnouncement locale={locale} />,
-                  )
-                }
-
-                return {
-                  ...defaultConverters,
-                  autolink: (args) => {
-                    const converter = defaultConverters.autolink
-                    const converted = typeof converter === 'function' ? converter(args) : converter
-                    return appendAnnouncement(converted, args.node.fields?.newTab)
-                  },
-                  link: (args) => {
-                    const converter = defaultConverters.link
-                    const converted = typeof converter === 'function' ? converter(args) : converter
-                    return appendAnnouncement(converted, args.node.fields?.newTab)
-                  },
-                }
-              }}
-              data={block.body}
-            />
-          )}
+          <RichContent data={block.body} locale={locale} />
           {block.items?.length ? (
             <ul className="line-list">
               {block.items.map((item, index) => (

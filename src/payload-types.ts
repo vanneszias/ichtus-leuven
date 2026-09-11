@@ -687,6 +687,24 @@ export interface Event {
   id: number;
   title: string;
   summary?: string | null;
+  /**
+   * Verschijnt onder de samenvatting op de activiteitpagina. Bedoeld voor praktische afspraken, een programma of wat je moet meebrengen.
+   */
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   startsAt: string;
   endsAt?: string | null;
   allDay?: boolean | null;
@@ -1430,6 +1448,7 @@ export interface PagesSelect<T extends boolean = true> {
 export interface EventsSelect<T extends boolean = true> {
   title?: T;
   summary?: T;
+  body?: T;
   startsAt?: T;
   endsAt?: T;
   allDay?: T;

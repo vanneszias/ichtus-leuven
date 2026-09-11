@@ -25,6 +25,8 @@ import * as migration_20260910_120000_retire_orange_accent from './20260910_1200
 import * as migration_20260910_130000_event_detail_pages from './20260910_130000_event_detail_pages'
 import * as migration_20260910_140000_activity_type_colour from './20260910_140000_activity_type_colour'
 import * as migration_20260911_120000_english_activity_copy from './20260911_120000_english_activity_copy'
+import * as migration_20260911_140000_activity_body from './20260911_140000_activity_body'
+import * as migration_20260911_150000_synced_activities_without_pages from './20260911_150000_synced_activities_without_pages'
 
 export const migrations = [
   {
@@ -161,5 +163,15 @@ export const migrations = [
     up: migration_20260911_120000_english_activity_copy.up,
     down: migration_20260911_120000_english_activity_copy.down,
     name: '20260911_120000_english_activity_copy',
+  },
+  {
+    up: migration_20260911_140000_activity_body.up,
+    down: migration_20260911_140000_activity_body.down,
+    name: '20260911_140000_activity_body',
+  },
+  {
+    up: migration_20260911_150000_synced_activities_without_pages.up,
+    down: migration_20260911_150000_synced_activities_without_pages.down,
+    name: '20260911_150000_synced_activities_without_pages',
   },
 ]

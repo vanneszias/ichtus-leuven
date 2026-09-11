@@ -226,7 +226,13 @@ export async function synchronizeCalendarSource(payload: Payload, fetcher: typeo
         overrideAccess: true,
         data: {
           ...sourceData,
-          ...(forward ? { detail: 'external' as const, detailUrl: forward } : {}),
+          // A calendar entry carries a title, a time and a place and nothing
+          // else, which is not a page worth opening. A synced activity is
+          // therefore announced in the agenda and the calendar without a link
+          // until an editor decides it has enough to say and turns its page on.
+          ...(forward
+            ? { detail: 'external' as const, detailUrl: forward }
+            : { detail: 'none' as const }),
           eventType: type,
           // The description of a forwarded activity is that very link, which
           // the agenda would otherwise repeat as the activity's summary.

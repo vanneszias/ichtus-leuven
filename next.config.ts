@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: `default-src 'self'; base-uri 'self'; connect-src 'self' https://challenges.cloudflare.com https://www.googleapis.com${analyticsOrigin}; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; frame-src 'self' https://challenges.cloudflare.com; img-src 'self' blob: data: https:; object-src 'none'; ${scriptSource}; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests`,
+            value: `default-src 'self'; base-uri 'self'; connect-src 'self' https://challenges.cloudflare.com https://www.googleapis.com${analyticsOrigin}; font-src 'self' data:; form-action 'self'; frame-ancestors 'self'; frame-src 'self' https://challenges.cloudflare.com https://www.google.com; img-src 'self' blob: data: https:; object-src 'none'; ${scriptSource}; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests`,
           },
           // Severs the opener relationship for cross-origin windows, which is
           // what Lighthouse's origin-isolation audit asks for. `allow-popups`
