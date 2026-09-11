@@ -30,6 +30,24 @@ test.describe('Admin Panel', () => {
     await expect(listViewArtifact).toBeVisible()
   })
 
+  test('can trigger a calendar synchronization from the activity list', async () => {
+    await page.goto('http://localhost:3000/admin/collections/events')
+    const button = page.getByRole('button', { name: 'Synchroniseer nu' })
+    await expect(button).toBeVisible()
+
+    // No Google credentials are configured for e2e, so the run is expected to
+    // fail. Reaching that failure still proves the button reached the endpoint
+    // on the admin session alone, rather than being rejected as unauthorized.
+    const [response] = await Promise.all([
+      page.waitForResponse((candidate) => candidate.url().includes('/api/calendar/sync')),
+      button.click(),
+    ])
+    expect(response.status()).not.toBe(401)
+    await expect(
+      page.getByText(/Google Calendar request failed|Synchronisatie mislukt\./),
+    ).toBeVisible()
+  })
+
   test('can navigate to edit view', async () => {
     await page.goto(`http://localhost:3000/admin/collections/users/${userID}`)
     await expect(page).toHaveURL(new RegExp(`/admin/collections/users/${userID}(?:\\?.*)?$`))

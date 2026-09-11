@@ -40,6 +40,9 @@ export const Events: CollectionConfig = {
     update: activityManagers,
   },
   admin: {
+    components: {
+      beforeListTable: ['@/components/admin/CalendarSyncButton'],
+    },
     defaultColumns: ['title', 'startsAt', 'eventType', 'detail', 'source', '_status'],
     group: 'Activiteiten',
     useAsTitle: 'title',
