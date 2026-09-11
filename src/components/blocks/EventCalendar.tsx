@@ -46,17 +46,11 @@ export function EventCalendar({ entries, locale }: { entries: CalendarEntry[]; l
         // Filled chips rather than the default dot: the colour names the kind
         // of evening here, so it is information and not decoration on a bullet.
         eventDisplay="block"
-        events={entries.map((entry) => ({
-          allDay: entry.allDay,
-          className: entry.className,
-          color: entry.color,
-          contrastColor: entry.contrastColor,
-          end: entry.end,
-          id: entry.id,
-          start: entry.start,
-          title: entry.title,
-          url: entry.url,
-        }))}
+        // FullCalendar refines every key an event input carries, so a
+        // present-but-undefined `url` arrives as the string "undefined" and
+        // sends an unlinked activity to /undefined. An activity without a
+        // detail page has to leave the key out altogether.
+        events={entries.map(({ url, ...entry }) => (url ? { ...entry, url } : entry))}
         eventTimeFormat={{ hour: '2-digit', minute: '2-digit' }}
         headerToolbar={{
           center: 'title',
