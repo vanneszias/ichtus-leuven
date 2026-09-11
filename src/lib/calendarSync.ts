@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { ICHTUS_VLAANDEREN_URL } from '@/lib/events'
 import { calendarConfig } from '@/lib/runtimeConfig'
 
 type GoogleEvent = {
@@ -34,9 +35,20 @@ function d1(payload: Payload) {
 /** The kind of evening a synced title announces, which also gives it its colour. */
 function eventType(title: string) {
   const normalized = title.toLowerCase()
-  if (normalized.includes('kring')) return { eventType: 'smallGroup' as const }
-  if (normalized.includes('wild')) return { eventType: 'wild' as const }
-  return { eventType: 'largeGroup' as const }
+  if (normalized.includes('vlaanderen')) return 'vlaanderen' as const
+  if (normalized.includes('kring')) return 'smallGroup' as const
+  if (normalized.includes('wild')) return 'wild' as const
+  return 'largeGroup' as const
+}
+
+/**
+ * Ichtus Vlaanderen announces its activities on its own site and carries that
+ * page as the description of its calendar entry, so a synced activity of
+ * theirs forwards there. Without a link in the description their front page is
+ * the closest destination we know of.
+ */
+function vlaanderenLink(description: string | undefined) {
+  return description?.match(/https:\/\/[^\s"'<>]+/)?.[0] ?? ICHTUS_VLAANDEREN_URL
 }
 
 function plainText(value: string | undefined) {
@@ -165,14 +177,20 @@ export async function synchronizeCalendarSource(payload: Payload, fetcher: typeo
         overrideAccess: true,
       })
     } else {
+      const type = eventType(item.summary)
+      const forward = type === 'vlaanderen' ? vlaanderenLink(item.description) : null
+      const summary = plainText(item.description)
       await payload.create({
         collection: 'events',
         locale: 'nl',
         overrideAccess: true,
         data: {
           ...sourceData,
-          ...eventType(item.summary),
-          summary: plainText(item.description),
+          ...(forward ? { detail: 'external' as const, detailUrl: forward } : {}),
+          eventType: type,
+          // The description of a forwarded activity is that very link, which
+          // the agenda would otherwise repeat as the activity's summary.
+          summary: summary === forward ? undefined : summary,
           _status: 'published',
         },
       })

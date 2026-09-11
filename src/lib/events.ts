@@ -6,6 +6,13 @@ export type EventDetail = NonNullable<Event['detail']>
 
 export type EventHref = { external: boolean; href: string }
 
+/**
+ * Ichtus Vlaanderen runs its own activities and documents them on its own
+ * site, so an activity of theirs sends visitors there rather than to a page
+ * here that would only repeat the calendar entry.
+ */
+export const ICHTUS_VLAANDEREN_URL = 'https://ichtus.be/'
+
 const MAX_SLUG_LENGTH = 60
 
 /**
@@ -28,16 +35,24 @@ export function eventSlugFromTitle(title: string): string {
  * follow-up, so “no page at all” has to stay a first-class outcome.
  */
 export function eventDetailHref(
-  event: Pick<Event, 'detail' | 'detailUrl' | 'slug'>,
+  event: Pick<Event, 'detail' | 'detailUrl' | 'eventType' | 'registrationMode' | 'slug'>,
   locale: Locale,
 ): EventHref | null {
   // Own page is the historical behavior, so an Event that predates the
   // setting keeps its page until an editor decides otherwise.
   const detail = event.detail ?? 'page'
-  if (detail === 'page' && event.slug?.trim())
-    return { external: false, href: `/${locale}/activities/${event.slug.trim()}` }
   if (detail === 'external' && event.detailUrl?.trim())
     return { external: true, href: event.detailUrl.trim() }
+  // An activity of Ichtus Vlaanderen points at their site instead of a page
+  // here, unless this website is the one taking the registrations.
+  if (
+    detail === 'page' &&
+    event.eventType === 'vlaanderen' &&
+    event.registrationMode !== 'internal'
+  )
+    return { external: true, href: ICHTUS_VLAANDEREN_URL }
+  if (detail === 'page' && event.slug?.trim())
+    return { external: false, href: `/${locale}/activities/${event.slug.trim()}` }
   return null
 }
 
@@ -60,10 +75,11 @@ export type CalendarEntry = {
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 
 /**
- * The colour is the type: a visitor learns to read a salmon circle as a WILD
- * and a pale blue one as a shared evening. Two fills is all the palette holds,
- * so the two remaining kinds are told apart by an outline and by inverting.
- * `styles.css` paints the same four surfaces for the agenda badge.
+ * The colour is the type: a visitor learns to read a salmon circle as a WILD,
+ * a pale blue one as a shared evening and a rose one as an activity of Ichtus
+ * Vlaanderen. The two kinds the palette has no fill left for are told apart by
+ * an outline and by inverting. `styles.css` paints the same five surfaces for
+ * the agenda badge.
  */
 type EventTypeSurface = Pick<CalendarEntry, 'className' | 'color' | 'contrastColor'>
 
@@ -75,6 +91,7 @@ const typeSurfaces: Record<EventType, EventTypeSurface> = {
     color: 'var(--white)',
     contrastColor: 'var(--blue)',
   },
+  vlaanderen: { color: 'var(--rose)', contrastColor: 'var(--blue)' },
   wild: { color: 'var(--pink)', contrastColor: 'var(--blue)' },
 }
 

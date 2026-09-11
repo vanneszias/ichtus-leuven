@@ -210,7 +210,7 @@ export const sampleEvents: SampleEvent[] = [
     detail: 'external',
     detailUrl: INSTAGRAM_URL,
     ends: { time: '22:00' },
-    eventType: 'other',
+    eventType: 'vlaanderen',
     registrationMode: 'external',
     registrationUrl: INSTAGRAM_URL,
     starts: { time: '20:00', weeks: 6 },

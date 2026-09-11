@@ -42,7 +42,7 @@ describe('sample activity schedule', () => {
       new Set(sampleEvents.map(pick))
 
     expect(values((sample) => sample.eventType)).toEqual(
-      new Set(['largeGroup', 'smallGroup', 'wild', 'other']),
+      new Set(['largeGroup', 'smallGroup', 'wild', 'vlaanderen', 'other']),
     )
     expect(values((sample) => sample.detail)).toEqual(new Set(['page', 'external', 'none']))
     expect(values((sample) => sample.registrationMode)).toEqual(

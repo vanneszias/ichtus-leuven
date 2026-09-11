@@ -20,23 +20,31 @@ const allDayLabels = { en: 'All day', nl: 'Hele dag' }
  * screen readers, which have no colour to read.
  */
 const eventTypeBadges = {
-  en: { largeGroup: 'GA', other: 'Extra', smallGroup: 'Group', wild: 'WILD' },
-  nl: { largeGroup: 'GA', other: 'Extra', smallGroup: 'Kring', wild: 'WILD' },
+  en: { largeGroup: 'GA', other: 'Extra', smallGroup: 'Group', vlaanderen: 'IV', wild: 'WILD' },
+  nl: { largeGroup: 'GA', other: 'Extra', smallGroup: 'Kring', vlaanderen: 'IV', wild: 'WILD' },
 }
 
 const eventTypeClasses = {
   largeGroup: 'large-group',
   other: 'other',
   smallGroup: 'small-group',
+  vlaanderen: 'vlaanderen',
   wild: 'wild',
 }
 
 const eventTypeLabels = {
-  en: { largeGroup: 'Shared evening', other: 'Activity', smallGroup: 'Small group', wild: 'WILD' },
+  en: {
+    largeGroup: 'Shared evening',
+    other: 'Activity',
+    smallGroup: 'Small group',
+    vlaanderen: 'Ichtus Vlaanderen',
+    wild: 'WILD',
+  },
   nl: {
     largeGroup: 'Gezamenlijke avond',
     other: 'Activiteit',
     smallGroup: 'Kringavond',
+    vlaanderen: 'Ichtus Vlaanderen',
     wild: 'WILD',
   },
 }

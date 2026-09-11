@@ -5,7 +5,11 @@ import config from '../../src/payload.config'
 
 describe('Calendar Source synchronization', () => {
   let payload: Payload
-  const externalIDs = ['calendar-cancelled-test', 'calendar-created-test']
+  const externalIDs = [
+    'calendar-cancelled-test',
+    'calendar-created-test',
+    'calendar-vlaanderen-test',
+  ]
 
   beforeAll(async () => {
     process.env.GOOGLE_CALENDAR_ID = 'calendar@example.org'
@@ -157,6 +161,38 @@ describe('Calendar Source synchronization', () => {
       summary: 'Editorial summary',
       title: 'Renamed calendar event',
     })
+  })
+
+  it('forwards a synced Ichtus Vlaanderen activity to the page on their own site', async () => {
+    await synchronizeCalendarSource(payload, async () =>
+      Response.json({
+        items: [
+          {
+            id: externalIDs[2],
+            summary: 'Apéro Ichtus Vlaanderen',
+            description: 'https://ichtus.be/ichtus-apero/',
+            start: { dateTime: new Date(Date.now() + 259_200_000).toISOString() },
+          },
+        ],
+        nextSyncToken: 'incremental-token-3',
+      }),
+    )
+
+    const created = await payload.find({
+      collection: 'events',
+      limit: 1,
+      overrideAccess: true,
+      where: { externalId: { equals: externalIDs[2] } },
+    })
+    expect(created.docs[0]).toMatchObject({
+      detail: 'external',
+      detailUrl: 'https://ichtus.be/ichtus-apero/',
+      eventType: 'vlaanderen',
+    })
+    // The description was only that link, so it is the destination rather than
+    // the summary, and the activity gains no page of its own here.
+    expect(created.docs[0].summary).toBeFalsy()
+    expect(created.docs[0].slug).toBeFalsy()
   })
 
   it('resets an expired incremental token without losing Event data', async () => {

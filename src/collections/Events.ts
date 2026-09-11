@@ -135,6 +135,7 @@ export const Events: CollectionConfig = {
         { label: 'Gezamenlijke avond', value: 'largeGroup' },
         { label: 'Kringavond', value: 'smallGroup' },
         { label: 'WILD', value: 'wild' },
+        { label: 'Ichtus Vlaanderen', value: 'vlaanderen' },
         { label: 'Overig', value: 'other' },
       ],
     },

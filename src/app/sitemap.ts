@@ -35,7 +35,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           fallbackLocale: false,
           locale,
           pagination: false,
-          select: { id: true, detail: true, slug: true, title: true, updatedAt: true },
+          select: {
+            id: true,
+            detail: true,
+            eventType: true,
+            registrationMode: true,
+            slug: true,
+            title: true,
+            updatedAt: true,
+          },
           where: {
             and: [
               { _status: { equals: 'published' } },

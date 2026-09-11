@@ -120,6 +120,15 @@ describe('sitemap contract', () => {
             title: 'Elders aangekondigd',
             updatedAt: '2026-08-30T10:00:00.000Z',
           },
+          // An activity of Ichtus Vlaanderen forwards to their site, so the
+          // page it would have had here is not ours to index.
+          {
+            eventType: 'vlaanderen',
+            id: 13,
+            slug: 'quiztus-ichtus-vlaanderen',
+            title: 'Quiztus Ichtus Vlaanderen',
+            updatedAt: '2026-08-30T10:00:00.000Z',
+          },
         ],
         locale: 'nl',
         pages: [
@@ -171,6 +180,7 @@ describe('sitemap contract', () => {
       'x-default': 'https://ichtus.be/nl/activities/startavond',
     })
     expect(JSON.stringify(sitemap)).not.toContain('verborgen')
+    expect(JSON.stringify(sitemap)).not.toContain('quiztus')
   })
 })
 

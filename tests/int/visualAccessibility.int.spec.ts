@@ -26,7 +26,7 @@ function contrast(first: string, second: string) {
 describe('Visual accessibility tokens', () => {
   it('keeps approved foreground and background combinations at WCAG AA contrast', () => {
     const blue = color('blue')
-    for (const background of ['white', 'yellow', 'pink', 'green']) {
+    for (const background of ['white', 'yellow', 'pink', 'rose', 'green']) {
       expect(contrast(blue, color(background)), `blue on ${background}`).toBeGreaterThanOrEqual(4.5)
     }
     expect(contrast(color('white'), blue), 'white on blue').toBeGreaterThanOrEqual(4.5)
@@ -34,7 +34,7 @@ describe('Visual accessibility tokens', () => {
 
   it('defines contrast-safe focus rings for every approved surface family', () => {
     const blue = color('blue')
-    for (const background of ['white', 'yellow', 'pink', 'green']) {
+    for (const background of ['white', 'yellow', 'pink', 'rose', 'green']) {
       expect(contrast(blue, color(background)), `focus on ${background}`).toBeGreaterThanOrEqual(3)
     }
     expect(contrast(color('white'), blue), 'focus on blue').toBeGreaterThanOrEqual(3)

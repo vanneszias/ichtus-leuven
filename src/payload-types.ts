@@ -691,7 +691,7 @@ export interface Event {
   endsAt?: string | null;
   allDay?: boolean | null;
   location?: string | null;
-  eventType?: ('largeGroup' | 'smallGroup' | 'wild' | 'other') | null;
+  eventType?: ('largeGroup' | 'smallGroup' | 'wild' | 'vlaanderen' | 'other') | null;
   image?: (number | null) | Media;
   /**
    * Bepaalt waar “meer info” in de agenda en de kalender naartoe wijst. “Geen pagina” toont de activiteit zonder link.

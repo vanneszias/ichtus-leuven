@@ -1,5 +1,6 @@
 import type { Metadata, MetadataRoute } from 'next'
 
+import { eventDetailHref } from '@/lib/events'
 import type { Event, Media } from '@/payload-types'
 
 export type SEOLocale = 'nl' | 'en'
@@ -28,7 +29,9 @@ type SitemapPage = {
 
 type SitemapEvent = {
   detail?: Event['detail'] | null
+  eventType?: Event['eventType'] | null
   id: number
+  registrationMode?: Event['registrationMode'] | null
   slug?: string | null
   title?: string | null
   updatedAt: string
@@ -190,11 +193,11 @@ export function createSitemapEntries(
     }
     for (const event of events) {
       // Only Events with their own page are addressable; the rest live in the
-      // calendar and would map onto a 404.
-      if (!event.title?.trim() || (event.detail ?? 'page') !== 'page' || !event.slug?.trim())
-        continue
+      // calendar or on somebody else's site and would map onto a 404.
+      const link = event.title?.trim() ? eventDetailHref(event, locale) : null
+      if (!link || link.external) continue
       const hrefs = eventHrefs.get(event.id) || {}
-      hrefs[locale] = `/${locale}/activities/${event.slug.trim()}`
+      hrefs[locale] = link.href
       eventHrefs.set(event.id, hrefs)
     }
   }

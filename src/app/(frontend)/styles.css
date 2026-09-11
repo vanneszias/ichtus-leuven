@@ -19,6 +19,7 @@
   --white: #ffffff;
   --yellow: #d9edf8;
   --pink: #f2ad98;
+  --rose: #f0b6cf;
   --green: #d9edf8;
   --focus-ring: var(--blue);
   --display: "Internet Friends", ui-rounded, sans-serif;
@@ -862,8 +863,12 @@ body:has(.site-header--hidden) .about-nav {
   background: var(--pink);
   color: var(--blue);
 }
-/* Two fills is all the palette holds, so the remaining kinds are told apart
-   by an outline and by inverting rather than by a third, weaker tint. */
+.event-card__badge--vlaanderen {
+  background: var(--rose);
+  color: var(--blue);
+}
+/* Three fills is all the palette holds, so the remaining kinds are told apart
+   by an outline and by inverting rather than by a fourth, weaker tint. */
 .event-card__badge--small-group {
   background: var(--white);
   border: var(--border);

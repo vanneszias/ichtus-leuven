@@ -56,6 +56,31 @@ describe('activity links', () => {
     expect(eventDetailHref({ ...baseEvent, detail: 'external', detailUrl: null }, 'nl')).toBeNull()
   })
 
+  it('forwards an activity of Ichtus Vlaanderen to their own site', () => {
+    expect(eventDetailHref({ ...baseEvent, eventType: 'vlaanderen' }, 'nl')).toEqual({
+      external: true,
+      href: 'https://ichtus.be/',
+    })
+    expect(
+      eventDetailHref(
+        {
+          ...baseEvent,
+          detail: 'external',
+          detailUrl: 'https://ichtus.be/ichtus-apero/',
+          eventType: 'vlaanderen',
+        },
+        'nl',
+      )?.href,
+    ).toBe('https://ichtus.be/ichtus-apero/')
+  })
+
+  it('keeps the own page of a Vlaanderen activity that registers on this website', () => {
+    expect(
+      eventDetailHref({ ...baseEvent, eventType: 'vlaanderen', registrationMode: 'internal' }, 'nl')
+        ?.href,
+    ).toBe('/nl/activities/startavond')
+  })
+
   it('treats an Event from before the setting existed as having its own page', () => {
     expect(eventDetailHref({ ...baseEvent, detail: null }, 'nl')?.href).toBe(
       '/nl/activities/startavond',
@@ -86,6 +111,14 @@ describe('calendar entries', () => {
     expect(smallGroup.className).toBe('fc-event--outlined')
     expect(other.color).toBe('var(--blue)')
     expect(other.contrastColor).toBe('var(--white)')
+  })
+
+  it('gives an activity of Ichtus Vlaanderen its own rose surface', () => {
+    expect(calendarEntry({ ...baseEvent, eventType: 'vlaanderen' }, 'nl')).toMatchObject({
+      color: 'var(--rose)',
+      contrastColor: 'var(--blue)',
+      url: 'https://ichtus.be/',
+    })
   })
 
   it('falls back to the shared-evening colour for an activity without a type', () => {
