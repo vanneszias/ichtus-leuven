@@ -24,6 +24,7 @@ import * as migration_20260903_140000_calendar_pagination_contract from './20260
 import * as migration_20260910_120000_retire_orange_accent from './20260910_120000_retire_orange_accent'
 import * as migration_20260910_130000_event_detail_pages from './20260910_130000_event_detail_pages'
 import * as migration_20260910_140000_activity_type_colour from './20260910_140000_activity_type_colour'
+import * as migration_20260911_120000_english_activity_copy from './20260911_120000_english_activity_copy'
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20260910_140000_activity_type_colour.up,
     down: migration_20260910_140000_activity_type_colour.down,
     name: '20260910_140000_activity_type_colour',
+  },
+  {
+    up: migration_20260911_120000_english_activity_copy.up,
+    down: migration_20260911_120000_english_activity_copy.down,
+    name: '20260911_120000_english_activity_copy',
   },
 ]

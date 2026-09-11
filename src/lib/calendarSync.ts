@@ -87,6 +87,29 @@ async function saveState(
     .run()
 }
 
+/**
+ * The public site reads one locale without falling back, so an activity that
+ * exists in Dutch alone is absent from the English agenda, calendar and
+ * sitemap rather than merely untranslated. Google Calendar carries a single
+ * Dutch title, so a synchronized activity seeds the English locale with it:
+ * the activity is there to be found, and an editor replaces the wording with
+ * real English copy. The address is shared so the English detail page answers
+ * at the same slug the Dutch one does.
+ */
+async function seedEnglish(
+  payload: Payload,
+  id: number | string,
+  data: { location?: string | null; slug?: string | null; summary?: string | null; title: string },
+) {
+  await payload.update({
+    collection: 'events',
+    id,
+    data,
+    locale: 'en',
+    overrideAccess: true,
+  })
+}
+
 export async function synchronizeCalendarSource(payload: Payload, fetcher: typeof fetch = fetch) {
   const { apiKey, calendarID } = calendarConfig()
   const current = await state(payload)
@@ -176,11 +199,28 @@ export async function synchronizeCalendarSource(payload: Payload, fetcher: typeo
         locale: 'nl',
         overrideAccess: true,
       })
+      const english = await payload.findByID({
+        collection: 'events',
+        id: stored.id,
+        fallbackLocale: false,
+        locale: 'en',
+        overrideAccess: true,
+      })
+      // An English title of an editor's own outranks the calendar; a copy that
+      // still repeats the Dutch one was never translated and keeps following
+      // the source. The summary is left out here for the same reason the Dutch
+      // copy leaves it out: editors write it, the description does not.
+      if (!english.title?.trim() || english.title === stored.title)
+        await seedEnglish(payload, stored.id, {
+          location: sourceData.location,
+          slug: english.slug?.trim() ? undefined : stored.slug,
+          title: sourceData.title,
+        })
     } else {
       const type = eventType(item.summary)
       const forward = type === 'vlaanderen' ? vlaanderenLink(item.description) : null
       const summary = plainText(item.description)
-      await payload.create({
+      const created = await payload.create({
         collection: 'events',
         locale: 'nl',
         overrideAccess: true,
@@ -193,6 +233,12 @@ export async function synchronizeCalendarSource(payload: Payload, fetcher: typeo
           summary: summary === forward ? undefined : summary,
           _status: 'published',
         },
+      })
+      await seedEnglish(payload, created.id, {
+        location: created.location,
+        slug: created.slug,
+        summary: created.summary,
+        title: created.title,
       })
     }
     synced += 1

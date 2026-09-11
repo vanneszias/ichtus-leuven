@@ -122,6 +122,20 @@ describe('Calendar Source synchronization', () => {
       eventType: 'wild',
       summary: 'Safe summary',
     })
+    // The English site reads its own locale without falling back, so a synced
+    // activity is seeded there or it is missing from the English agenda.
+    const seeded = await payload.findByID({
+      collection: 'events',
+      id: created.docs[0].id,
+      fallbackLocale: false,
+      locale: 'en',
+      overrideAccess: true,
+    })
+    expect(seeded).toMatchObject({
+      slug: created.docs[0].slug,
+      summary: 'Safe summary',
+      title: 'WILD calendar test',
+    })
     await payload.update({
       collection: 'events',
       id: created.docs[0].id,
@@ -161,6 +175,60 @@ describe('Calendar Source synchronization', () => {
       summary: 'Editorial summary',
       title: 'Renamed calendar event',
     })
+    const untranslated = await payload.findByID({
+      collection: 'events',
+      id: created.docs[0].id,
+      fallbackLocale: false,
+      locale: 'en',
+      overrideAccess: true,
+    })
+    expect(untranslated.title).toBe('Renamed calendar event')
+  })
+
+  it('keeps an English title an editor wrote when the calendar entry is renamed', async () => {
+    const stored = await payload.find({
+      collection: 'events',
+      limit: 1,
+      overrideAccess: true,
+      where: { externalId: { equals: externalIDs[1] } },
+    })
+    await payload.update({
+      collection: 'events',
+      id: stored.docs[0].id,
+      data: { title: 'Translated evening' },
+      locale: 'en',
+      overrideAccess: true,
+    })
+
+    await synchronizeCalendarSource(payload, async () =>
+      Response.json({
+        items: [
+          {
+            id: externalIDs[1],
+            summary: 'Renamed once more',
+            start: { dateTime: new Date(Date.now() + 172_800_000).toISOString() },
+          },
+        ],
+        nextSyncToken: 'incremental-token-editorial',
+      }),
+    )
+
+    const english = await payload.findByID({
+      collection: 'events',
+      id: stored.docs[0].id,
+      fallbackLocale: false,
+      locale: 'en',
+      overrideAccess: true,
+    })
+    const dutch = await payload.findByID({
+      collection: 'events',
+      id: stored.docs[0].id,
+      fallbackLocale: false,
+      locale: 'nl',
+      overrideAccess: true,
+    })
+    expect(english.title).toBe('Translated evening')
+    expect(dutch.title).toBe('Renamed once more')
   })
 
   it('forwards a synced Ichtus Vlaanderen activity to the page on their own site', async () => {

@@ -44,6 +44,8 @@ Every Event answers this with its **Meer info** setting.
 
 Activities synchronized from Google Calendar arrive with their own page and a derived address. Give the ones that deserve one a real summary and photograph; set the rest to **Geen pagina**.
 
+The calendar speaks Dutch, so a synchronized activity starts out with that same Dutch title in the English locale: it is listed on the English site from the first synchronization rather than missing from it. Rewrite the title in English on the English tab and the synchronization leaves your wording alone, even when the activity is renamed in Google Calendar.
+
 ## The calendar page
 
 The calendar lives on an ordinary Page so it can carry an introduction and sit
