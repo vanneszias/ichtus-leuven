@@ -5,7 +5,9 @@ import type { Event, Media } from '@/payload-types'
 
 export type SEOLocale = 'nl' | 'en'
 
-const CREST_PATH = '/logos/ichtus-leuven-crest.svg'
+// Google does not accept SVG for the Organization logo, so the filled
+// crest raster is used here while the outline SVG stays the CSS mask.
+const CREST_PATH = '/logos/ichtus-leuven-crest.png'
 const SOCIAL_CARD_PATH = '/logos/social-card.jpg'
 const ORGANIZATION_ID = '#organization'
 const WEBSITE_ID = '#website'
@@ -260,9 +262,9 @@ export function createGlobalStructuredData(baseURL: string) {
         '@type': 'Organization',
         logo: {
           '@type': 'ImageObject',
-          height: 893,
+          height: 512,
           url: absoluteURL(CREST_PATH, baseURL),
-          width: 700,
+          width: 512,
         },
         name: 'Ichtus Leuven',
         url: baseURL,

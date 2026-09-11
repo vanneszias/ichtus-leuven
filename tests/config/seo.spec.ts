@@ -192,7 +192,7 @@ describe('structured data and application identity', () => {
       'Organization',
       'WebSite',
     ])
-    expect(graph[0].logo.url).toBe('https://ichtus.be/logos/ichtus-leuven-crest.svg')
+    expect(graph[0].logo.url).toBe('https://ichtus.be/logos/ichtus-leuven-crest.png')
   })
 
   it('publishes complete Event data and registration availability', () => {
