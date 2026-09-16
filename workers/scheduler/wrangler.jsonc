@@ -4,6 +4,12 @@
   "name": "ichtus-leuven-scheduler-local",
   "keep_vars": true,
   "compatibility_date": "2026-08-01",
+  // Without global_fetch_strictly_public, this Worker's fetch() to the app's
+  // own workers.dev hostname is treated as an internal same-account subrequest:
+  // it bypasses Workers routing, looks for a zone origin that does not exist,
+  // and every job returns 404 without the app Worker ever being invoked. The
+  // app's wrangler.jsonc carries the same flag for the same reason.
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "triggers": { "crons": ["* * * * *"] },
   "observability": { "enabled": true },
   "env": {
