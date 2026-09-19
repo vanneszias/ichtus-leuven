@@ -1,4 +1,4 @@
-import type { CollectionConfig, PayloadRequest } from 'payload'
+import { type CollectionConfig, type PayloadRequest, ValidationError } from 'payload'
 
 import { activityManagers, publishedOrAuthenticated } from '@/access'
 import { pageRichTextEditor, validatePageRichTextHeadings } from '@/blocks/schemaFields'
@@ -80,9 +80,14 @@ export const Events: CollectionConfig = {
             },
           })
           if (data.capacity < confirmed.totalDocs)
-            throw new Error(
-              `Capaciteit kan niet lager zijn dan ${confirmed.totalDocs} bevestigde inschrijvingen.`,
-            )
+            throw new ValidationError({
+              errors: [
+                {
+                  path: 'capacity',
+                  message: `Capaciteit kan niet lager zijn dan ${confirmed.totalDocs} bevestigde inschrijvingen.`,
+                },
+              ],
+            })
         }
         const publicationClosed =
           originalDoc._status === 'published' && data._status && data._status !== 'published'
@@ -91,7 +96,27 @@ export const Events: CollectionConfig = {
           data.registrationMode &&
           data.registrationMode !== 'internal'
         if (internalRegistrationClosed && !data.confirmRegistrationClosure) {
-          throw new Error('Bevestig expliciet dat alle actieve inschrijvingen worden geannuleerd.')
+          const active = await req.payload.count({
+            collection: 'registrations',
+            overrideAccess: true,
+            req,
+            where: {
+              and: [
+                { event: { equals: originalDoc.id } },
+                { status: { in: ['confirmed', 'waitlisted'] } },
+              ],
+            },
+          })
+          if (active.totalDocs)
+            throw new ValidationError({
+              errors: [
+                {
+                  path: 'confirmRegistrationClosure',
+                  message:
+                    'Vink aan dat je alle actieve inschrijvingen en wachtlijstplaatsen wilt annuleren voordat je de inschrijfmethode wijzigt.',
+                },
+              ],
+            })
         }
         if (publicationClosed || internalRegistrationClosed) {
           data.registrationClosurePendingAt = new Date().toISOString()
@@ -290,11 +315,12 @@ export const Events: CollectionConfig = {
     {
       name: 'confirmRegistrationClosure',
       type: 'checkbox',
+      label: 'Actieve inschrijvingen annuleren',
       defaultValue: false,
       admin: {
         condition: (_, siblingData) => siblingData?.registrationMode !== 'internal',
         description:
-          'Bevestig dat actieve inschrijvingen en wachtlijstplaatsen op de achtergrond worden geannuleerd.',
+          'Alleen verplicht als er nog actieve inschrijvingen of wachtlijstplaatsen zijn bij het uitschakelen van inschrijving via deze website. Deze worden op de achtergrond geannuleerd.',
       },
     },
     {

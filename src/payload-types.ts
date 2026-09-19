@@ -735,7 +735,7 @@ export interface Event {
   registrationDeadline?: string | null;
   registrationClosedMessage?: string | null;
   /**
-   * Bevestig dat actieve inschrijvingen en wachtlijstplaatsen op de achtergrond worden geannuleerd.
+   * Alleen verplicht als er nog actieve inschrijvingen of wachtlijstplaatsen zijn bij het uitschakelen van inschrijving via deze website. Deze worden op de achtergrond geannuleerd.
    */
   confirmRegistrationClosure?: boolean | null;
   registrationClosurePendingAt?: string | null;

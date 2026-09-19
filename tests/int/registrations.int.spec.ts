@@ -749,7 +749,10 @@ describe('activity registrations', () => {
         overrideAccess: true,
         data: { registrationMode: 'none' },
       }),
-    ).rejects.toThrow('Bevestig expliciet')
+    ).rejects.toMatchObject({
+      status: 400,
+      data: { errors: [{ path: 'confirmRegistrationClosure', message: expect.any(String) }] },
+    })
     const first = await processEventRegistrationClosures(payload, 1)
     expect(first.processed).toBe(1)
     expect(first.hasMore).toBe(true)
@@ -775,6 +778,14 @@ describe('activity registrations', () => {
       overrideAccess: true,
     })
     expect(completed.registrationClosurePendingAt).toBeNull()
+    const noSignup = await payload.update({
+      collection: 'events',
+      id: closureEvent.id,
+      overrideAccess: true,
+      data: { registrationMode: 'none' },
+    })
+    expect(noSignup.registrationMode).toBe('none')
+    await processEventRegistrationClosures(payload, 10)
     const deliveries = await payload.find({
       collection: 'registration-deliveries',
       overrideAccess: true,
